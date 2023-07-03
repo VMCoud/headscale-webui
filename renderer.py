@@ -1,14 +1,13 @@
 # pylint: disable=line-too-long, wrong-import-order
 
 import headscale, helper, pytz, os, yaml, logging, json
-from flask              import Flask, Markup, render_template
-from datetime           import datetime
-from dateutil           import parser
+from flask import Flask, Markup, render_template
+from datetime import datetime
+from dateutil import parser
 from concurrent.futures import ALL_COMPLETED, wait
-from flask_executor     import Executor
+from flask_executor import Executor
 
 LOG_LEVEL = os.environ["LOG_LEVEL"].replace('"', '').upper()
-# Initiate the Flask application and logging:
 app = Flask(__name__, static_url_path="/static")
 match LOG_LEVEL:
     case "DEBUG"   : app.logger.setLevel(logging.DEBUG)
@@ -20,238 +19,218 @@ executor = Executor(app)
 
 def render_overview():
     app.logger.info("Rendering the Overview page")
-    url           = headscale.get_url()
-    api_key       = headscale.get_api_key()
+    url = headscale.get_url()
+    api_key = headscale.get_api_key()
 
-    timezone         = pytz.timezone(os.environ["TZ"] if os.environ["TZ"] else "UTC")
-    local_time       = timezone.localize(datetime.now())
-    
-    # Overview page will just read static information from the config file and display it
-    # Open the config.yaml and parse it.
+    timezone = pytz.timezone(os.environ["TZ"] if os.environ["TZ"] else "UTC")
+    local_time = timezone.localize(datetime.now())
+
     config_file = ""
-    try:    
-        config_file = open("/etc/headscale/config.yml",  "r")
+    try:
+        config_file = open("/etc/headscale/config.yml", "r")
         app.logger.info("Opening /etc/headscale/config.yml")
-    except: 
+    except:
         config_file = open("/etc/headscale/config.yaml", "r")
         app.logger.info("Opening /etc/headscale/config.yaml")
     config_yaml = yaml.safe_load(config_file)
 
-    # Get and display the following information:
-    # Overview of the server's machines, users, preauth keys, API key expiration, server version
-    
-    # Get all machines:
     machines = headscale.get_machines(url, api_key)
     machines_count = len(machines["machines"])
 
-    # Need to check if routes are attached to an active machine:
-    # ISSUE:  https://github.com/iFargle/headscale-webui/issues/36 
-    # ISSUE:  https://github.com/juanfont/headscale/issues/1228 
-
-    # Get all routes:
-    routes = headscale.get_routes(url,api_key)
+    routes = headscale.get_routes(url, api_key)
 
     total_routes = 0
     for route in routes["routes"]:
-        if int(route['machine']['id']) != 0: 
+        if int(route['machine']['id']) != 0:
             total_routes += 1
 
     enabled_routes = 0
     for route in routes["routes"]:
-        if route["enabled"] and route['advertised'] and int(route['machine']['id']) != 0: 
+        if route["enabled"] and route['advertised'] and int(route['machine']['id']) != 0:
             enabled_routes += 1
 
-    # Get a count of all enabled exit routes
     exits_count = 0
     exits_enabled_count = 0
     for route in routes["routes"]:
         if route['advertised'] and int(route['machine']['id']) != 0:
             if route["prefix"] == "0.0.0.0/0" or route["prefix"] == "::/0":
-                exits_count +=1
+                exits_count += 1
                 if route["enabled"]:
                     exits_enabled_count += 1
 
-    # Get User and PreAuth Key counts
-    user_count        = 0
+    user_count = 0
     usable_keys_count = 0
     users = headscale.get_users(url, api_key)
     for user in users["users"]:
-        user_count +=1
+        user_count += 1
         preauth_keys = headscale.get_preauth_keys(url, api_key, user["name"])
         for key in preauth_keys["preAuthKeys"]:
             expiration_parse = parser.parse(key["expiration"])
             key_expired = True if expiration_parse < local_time else False
-            if key["reusable"] and not key_expired: usable_keys_count += 1
-            if not key["reusable"] and not key["used"] and not key_expired: usable_keys_count += 1
+            if key["reusable"] and not key_expired:
+                usable_keys_count += 1
+            if not key["reusable"] and not key["used"] and not key_expired:
+                usable_keys_count += 1
 
-    # General Content variables:
     ip_prefixes, server_url, disable_check_updates, ephemeral_node_inactivity_timeout, node_update_check_interval = "N/A", "N/A", "N/A", "N/A", "N/A"
-    if "ip_prefixes"                       in config_yaml:  ip_prefixes                       = str(config_yaml["ip_prefixes"])
-    if "server_url"                        in config_yaml:  server_url                        = str(config_yaml["server_url"])
-    if "disable_check_updates"             in config_yaml:  disable_check_updates             = str(config_yaml["disable_check_updates"])
-    if "ephemeral_node_inactivity_timeout" in config_yaml:  ephemeral_node_inactivity_timeout = str(config_yaml["ephemeral_node_inactivity_timeout"])
-    if "node_update_check_interval"        in config_yaml:  node_update_check_interval        = str(config_yaml["node_update_check_interval"])
+    if "ip_prefixes" in config_yaml:
+        ip_prefixes = str(config_yaml["ip_prefixes"])
+    if "server_url" in config_yaml:
+        server_url = str(config_yaml["server_url"])
+    if "disable_check_updates" in config_yaml:
+        disable_check_updates = str(config_yaml["disable_check_updates"])
+    if "ephemeral_node_inactivity_timeout" in config_yaml:
+        ephemeral_node_inactivity_timeout = str(config_yaml["ephemeral_node_inactivity_timeout"])
+    if "node_update_check_interval" in config_yaml:
+        node_update_check_interval = str(config_yaml["node_update_check_interval"])
 
-    # OIDC Content variables:
     issuer, client_id, scope, use_expiry_from_token, expiry = "N/A", "N/A", "N/A", "N/A", "N/A"
     if "oidc" in config_yaml:
-        if "issuer"                in config_yaml["oidc"] : issuer                = str(config_yaml["oidc"]["issuer"])                
-        if "client_id"             in config_yaml["oidc"] : client_id             = str(config_yaml["oidc"]["client_id"])             
-        if "scope"                 in config_yaml["oidc"] : scope                 = str(config_yaml["oidc"]["scope"])                 
-        if "use_expiry_from_token" in config_yaml["oidc"] : use_expiry_from_token = str(config_yaml["oidc"]["use_expiry_from_token"]) 
-        if "expiry"                in config_yaml["oidc"] : expiry                = str(config_yaml["oidc"]["expiry"])   
+        if "issuer" in config_yaml["oidc"]:
+            issuer = str(config_yaml["oidc"]["issuer"])
+        if "client_id" in config_yaml["oidc"]:
+            client_id = str(config_yaml["oidc"]["client_id"])
+        if "scope" in config_yaml["oidc"]:
+            scope = str(config_yaml["oidc"]["scope"])
+        if "use_expiry_from_token" in config_yaml["oidc"]:
+            use_expiry_from_token = str(config_yaml["oidc"]["use_expiry_from_token"])
+        if "expiry" in config_yaml["oidc"]:
+            expiry = str(config_yaml["oidc"]["expiry"])
 
-    # Embedded DERP server information.
     enabled, region_id, region_code, region_name, stun_listen_addr = "N/A", "N/A", "N/A", "N/A", "N/A"
     if "derp" in config_yaml:
         if "server" in config_yaml["derp"] and config_yaml["derp"]["server"]["enabled"]:
-            if "enabled"          in config_yaml["derp"]["server"]: enabled          = str(config_yaml["derp"]["server"]["enabled"])          
-            if "region_id"        in config_yaml["derp"]["server"]: region_id        = str(config_yaml["derp"]["server"]["region_id"])        
-            if "region_code"      in config_yaml["derp"]["server"]: region_code      = str(config_yaml["derp"]["server"]["region_code"])      
-            if "region_name"      in config_yaml["derp"]["server"]: region_name      = str(config_yaml["derp"]["server"]["region_name"])      
-            if "stun_listen_addr" in config_yaml["derp"]["server"]: stun_listen_addr = str(config_yaml["derp"]["server"]["stun_listen_addr"]) 
-    
+            if "enabled" in config_yaml["derp"]["server"]:
+                enabled = str(config_yaml["derp"]["server"]["enabled"])
+            if "region_id" in config_yaml["derp"]["server"]:
+                region_id = str(config_yaml["derp"]["server"]["region_id"])
+            if "region_code" in config_yaml["derp"]["server"]:
+                region_code = str(config_yaml["derp"]["server"]["region_code"])
+            if "region_name" in config_yaml["derp"]["server"]:
+                region_name = str(config_yaml["derp"]["server"]["region_name"])
+            if "stun_listen_addr" in config_yaml["derp"]["server"]:
+                stun_listen_addr = str(config_yaml["derp"]["server"]["stun_listen_addr"])
+
     nameservers, magic_dns, domains, base_domain = "N/A", "N/A", "N/A", "N/A"
     if "dns_config" in config_yaml:
-        if "nameservers" in config_yaml["dns_config"]: nameservers = str(config_yaml["dns_config"]["nameservers"]) 
-        if "magic_dns"   in config_yaml["dns_config"]: magic_dns   = str(config_yaml["dns_config"]["magic_dns"])   
-        if "domains"     in config_yaml["dns_config"]: domains     = str(config_yaml["dns_config"]["domains"])     
-        if "base_domain" in config_yaml["dns_config"]: base_domain = str(config_yaml["dns_config"]["base_domain"]) 
+        if "nameservers" in config_yaml["dns_config"]:
+            nameservers = str(config_yaml["dns_config"]["nameservers"])
+        if "magic_dns" in config_yaml["dns_config"]:
+            magic_dns = str(config_yaml["dns_config"]["magic_dns"])
+        if "domains" in config_yaml["dns_config"]:
+            domains = str(config_yaml["dns_config"]["domains"])
+        if "base_domain" in config_yaml["dns_config"]:
+            base_domain = str(config_yaml["dns_config"]["base_domain"])
 
-    # Start putting the content together
-overview_content = """
-<div class="row">
-    <div class="col s1"></div>
-    <div class="col s10">
-        <ul class="collection with-header z-depth-1">
-            <li class="collection-header"><h4>服务器统计</h4></li>
-            <li class="collection-item"><div>已添加的机器数       <div class="secondary-content overview-page">"""+ str(machines_count) +"""</div></div></li>
-            <li class="collection-item"><div>已添加的用户数       <div class="secondary-content overview-page">"""+ str(user_count) +"""</div></div></li>
-            <li class="collection-item"><div>可用的预验证密钥数   <div class="secondary-content overview-page">"""+ str(usable_keys_count) +"""</div></div></li>
-            <li class="collection-item"><div>启用/总计路由数      <div class="secondary-content overview-page">"""+ str(enabled_routes) +"""/"""+str(total_routes) +"""</div></div></li>
-            <li class="collection-item"><div>启用/总计出口数      <div class="secondary-content overview-page">"""+ str(exits_enabled_count) +"""/"""+str(exits_count)+"""</div></div></li>
-        </ul>
+    overview_content = """
+    <div class="row">
+        <div class="col s1"></div>
+        <div class="col s10">
+            <ul class="collection with-header z-depth-1">
+                <li class="collection-header"><h4>服务器统计</h4></li>
+                <li class="collection-item"><div>已添加机器数       <div class="secondary-content overview-page">"""+ str(machines_count)                               +"""</div></div></li>
+                <li class="collection-item"><div>已添加用户数          <div class="secondary-content overview-page">"""+ str(user_count)                                   +"""</div></div></li>
+                <li class="collection-item"><div>可用预授权密钥数  <div class="secondary-content overview-page">"""+ str(usable_keys_count)                            +"""</div></div></li>
+                <li class="collection-item"><div>启用/总路由数 <div class="secondary-content overview-page">"""+ str(enabled_routes) +"""/"""+str(total_routes)    +"""</div></div></li>
+                <li class="collection-item"><div>启用/总出口数  <div class="secondary-content overview-page">"""+ str(exits_enabled_count) +"""/"""+str(exits_count)+"""</div></div></li>
+            </ul>
+        </div>
+        <div class="col s1"></div>
     </div>
-    <div class="col s1"></div>
-</div>
-"""
-
-general_content = """
-<div class="row">
-    <div class="col s1"></div>
-    <div class="col s10">
-        <ul class="collection with-header z-depth-1">
-            <li class="collection-header"><h4>常规设置</h4></li>
-            <li class="collection-item"><div>IP前缀                          <div class="secondary-content overview-page">"""+ ip_prefixes +"""</div></div></li>
-            <li class="collection-item"><div>服务器URL                       <div class="secondary-content overview-page">"""+ server_url +"""</div></div></li>
-            <li class="collection-item"><div>禁用更新检查                    <div class="secondary-content overview-page">"""+ disable_check_updates +"""</div></div></li>
-            <li class="collection-item"><div>临时节点不活动超时时间           <div class="secondary-content overview-page">"""+ ephemeral_node_inactivity_timeout +"""</div></div></li>
-            <li class="collection-item"><div>节点更新检查间隔                <div class="secondary-content overview-page">"""+ node_update_check_interval +"""</div></div></li>
-        </ul>
+    """
+    general_content = """
+    <div class="row">
+        <div class="col s1"></div>
+        <div class="col s10">
+            <ul class="collection with-header z-depth-1">
+                <li class="collection-header"><h4>常规</h4></li>
+                <li class="collection-item"><div>IP 前缀                       <div class="secondary-content overview-page">"""+ ip_prefixes                       +"""</div></div></li>
+                <li class="collection-item"><div>服务器 URL                        <div class="secondary-content overview-page">"""+ server_url                        +"""</div></div></li>
+                <li class="collection-item"><div>禁用更新检查                  <div class="secondary-content overview-page">"""+ disable_check_updates             +"""</div></div></li>
+                <li class="collection-item"><div>短暂节点不活动超时时间 <div class="secondary-content overview-page">"""+ ephemeral_node_inactivity_timeout +"""</div></div></li>
+                <li class="collection-item"><div>节点更新检查间隔        <div class="secondary-content overview-page">"""+ node_update_check_interval        +"""</div></div></li>
+            </ul>
+        </div>
+        <div class="col s1"></div>
     </div>
-    <div class="col s1"></div>
-</div>
-"""
-
-oidc_content = """
-<div class="row">
-    <div class="col s1"></div>
-    <div class="col s10">
-        <ul class="collection with-header z-depth-1">
-            <li class="collection-header"><h4>Headscale OIDC</h4></li>
-            <li class="collection-item"><div>发行者                          <div class="secondary-content overview-page">"""+ issuer +"""</div></div></li>
-            <li class="collection-item"><div>客户端ID                        <div class="secondary-content overview-page">"""+ client_id +"""</div></div></li>
-            <li class="collection-item"><div>范围                            <div class="secondary-content overview-page">"""+ scope +"""</div></div></li>
-            <li class="collection-item"><div>使用OIDC令牌过期时间            <div class="secondary-content overview-page">"""+ use_expiry_from_token +"""</div></div></li>
-            <li class="collection-item"><div>过期时间                        <div class="secondary-content overview-page">"""+ expiry +"""</div></div></li>
-        </ul>
+    """
+    oidc_content = """
+    <div class="row">
+        <div class="col s1"></div>
+        <div class="col s10">
+            <ul class="collection with-header z-depth-1">
+                <li class="collection-header"><h4>Headscale OIDC</h4></li>
+                <li class="collection-item"><div>发行人                <div class="secondary-content overview-page">"""+ issuer                +"""</div></div></li>
+                <li class="collection-item"><div>客户端 ID             <div class="secondary-content overview-page">"""+ client_id             +"""</div></div></li>
+                <li class="collection-item"><div>范围                 <div class="secondary-content overview-page">"""+ scope                 +"""</div></div></li>
+                <li class="collection-item"><div>使用 OIDC 令牌过期时间 <div class="secondary-content overview-page">"""+ use_expiry_from_token +"""</div></div></li>
+                <li class="collection-item"><div>过期时间                <div class="secondary-content overview-page">"""+ expiry                +"""</div></div></li>
+            </ul>
+        </div>
+        <div class="col s1"></div>
     </div>
-    <div class="col s1"></div>
-</div>
-"""
-
-derp_content = """
-<div class="row">
-    <div class="col s1"></div>
-    <div class="col s10">
-        <ul class="collection with-header z-depth-1">
-            <li class="collection-header"><h4>内嵌DERP</h4></li>
-            <li class="collection-item"><div>启用                            <div class="secondary-content overview-page">"""+ enabled +"""</div></div></li>
-            <li class="collection-item"><div>区域ID                          <div class="secondary-content overview-page">"""+ region_id +"""</div></div></li>
-            <li class="collection-item"><div>区域代码                        <div class="secondary-content overview-page">"""+ region_code +"""</div></div></li>
-            <li class="collection-item"><div>区域名称                        <div class="secondary-content overview-page">"""+ region_name +"""</div></div></li>
-            <li class="collection-item"><div>STUN地址                        <div class="secondary-content overview-page">"""+ stun_listen_addr +"""</div></div></li>
-        </ul>
+    """
+    derp_content = """
+    <div class="row">
+        <div class="col s1"></div>
+        <div class="col s10">
+            <ul class="collection with-header z-depth-1">
+                <li class="collection-header"><h4>嵌入的 DERP</h4></li>
+                <li class="collection-item"><div>已启用     <div class="secondary-content overview-page">"""+ enabled          +"""</div></div></li>
+                <li class="collection-item"><div>区域 ID   <div class="secondary-content overview-page">"""+ region_id        +"""</div></div></li>
+                <li class="collection-item"><div>区域代码 <div class="secondary-content overview-page">"""+ region_code      +"""</div></div></li>
+                <li class="collection-item"><div>区域名称 <div class="secondary-content overview-page">"""+ region_name      +"""</div></div></li>
+                <li class="collection-item"><div>STUN 地址<div class="secondary-content overview-page">"""+ stun_listen_addr +"""</div></div></li>
+            </ul>
+        </div>
+        <div class="col s1"></div>
     </div>
-    <div class="col s1"></div>
-</div>
-"""
-
-dns_content = """
-<div class="row">
-    <div class="col s1"></div>
-    <div class="col s10">
-        <ul class="collection with-header z-depth-1">
-            <li class="collection-header"><h4>DNS</h4></li>
-            <li class="collection-item"><div>DNS名称服务器                   <div class="secondary-content overview-page">"""+ nameservers +"""</div></div></li>
-            <li class="collection-item"><div>MagicDNS                        <div class="secondary-content overview-page">"""+ magic_dns +"""</div></div></li>
-            <li class="collection-item"><div>搜索域                          <div class="secondary-content overview-page">"""+ domains +"""</div></div></li>
-            <li class="collection-item"><div>基础域                          <div class="secondary-content overview-page">"""+ base_domain +"""</div></div></li>
-        </ul>
+    """
+    dns_content = """
+    <div class="row">
+        <div class="col s1"></div>
+        <div class="col s10">
+            <ul class="collection with-header z-depth-1">
+                <li class="collection-header"><h4>DNS</h4></li>
+                <li class="collection-item"><div>DNS 名服务器 <div class="secondary-content overview-page">"""+ nameservers  +"""</div></div></li>
+                <li class="collection-item"><div>MagicDNS        <div class="secondary-content overview-page">"""+ magic_dns    +"""</div></div></li>
+                <li class="collection-item"><div>搜索域  <div class="secondary-content overview-page">"""+ domains      +"""</div></div></li>
+                <li class="collection-item"><div>基础域 <div class="secondary-content overview-page">"""+ base_domain  +"""</div></div></li>
+            </ul>
+        </div>
+        <div class="col s1"></div>
     </div>
-    <div class="col s1"></div>
-</div>
-"""
+    """
 
-
-    # Remove content that isn't needed:
-    # Remove OIDC if it isn't available:
     if "oidc" not in config_yaml: oidc_content = ""
-    # Remove DERP if it isn't available or isn't enabled
-    if "derp" not in config_yaml:  derp_content = ""
+    if "derp" not in config_yaml: derp_content = ""
     if "derp" in config_yaml:
         if "server" in config_yaml["derp"]:
             if str(config_yaml["derp"]["server"]["enabled"]) == "False":
                 derp_content = ""
 
-    # TODO:  
-    #     Whether there are custom DERP servers
-    #         If there are custom DERP servers, get the file location from the config file.  Assume mapping is the same.
-    #     Whether the built-in DERP server is enabled 
-    #     The IP prefixes
-    #     The DNS config
-
-    if config_yaml["derp"]["paths"]: pass
-    #   # open the path:
-    #   derp_file = 
-    #   config_file = open("/etc/headscale/config.yaml", "r")
-    #   config_yaml = yaml.safe_load(config_file)
-    #     The ACME config, if not empty
-    #     Whether updates are running
-    #     Whether metrics are enabled (and their listen addr)
-    #     The log level
-    #     What kind of Database is being used to drive headscale
-
     content = "<br>" + overview_content + general_content + derp_content + oidc_content + dns_content + ""
     return Markup(content)
 
 def thread_machine_content(machine, machine_content, idx, all_routes, failover_pair_prefixes):
-    # machine      = passed in machine information
-    # content      = place to write the content
-
-    # app.logger.debug("Machine Information")
-    # app.logger.debug(str(machine))
     app.logger.debug("Machine Information =================")
     app.logger.debug("Name:  %s, ID:  %s, User:  %s, givenName: %s, ", str(machine["name"]), str(machine["id"]), str(machine["user"]["name"]), str(machine["givenName"]))
 
     url           = headscale.get_url()
     api_key       = headscale.get_api_key()
 
-    # Set the current timezone and local time
-    timezone   = pytz.timezone(os.environ["TZ"] if os.environ["TZ"] else "UTC")
-    local_time = timezone.localize(datetime.now())
+    timezone         = pytz.timezone(os.environ["TZ"] if os.environ["TZ"] else "UTC")
+    local_time       = timezone.localize(datetime.now())
 
-    # Get the machines routes
+    config_file = ""
+    try:
+        config_file = open("/etc/headscale/config.yml", "r")
+        app.logger.info("Opening /etc/headscale/config.yml")
+    except:
+        config_file = open("/etc/headscale/config.yaml", "r")
+        app.logger.info("Opening /etc/headscale/config.yaml")
+    config_yaml = yaml.safe_load(config_file)
+
     pulled_routes = headscale.get_machine_routes(url, api_key, machine["id"])
     routes = ""
 
@@ -274,7 +253,7 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
             routes = """
                 <li class="collection-item avatar">
                     <i class="material-icons circle">directions</i>
-                    <span class="title">路由</span>
+                    <span class="title">Routes</span>
                     <p>
             """
             # app.logger.debug("Pulled Routes Dump:  "+str(pulled_routes))
@@ -300,15 +279,14 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
 
             # Print the button for the Exit routes:
             if exit_route_found:
-                routes = routes + """ <p 
-                    class='waves-effect waves-light btn-small """ + exit_enabled_color + """ lighten-2 tooltipped'
-                    data-position='top' data-tooltip='点击以""" + exit_tooltip + """'
-                    id='""" + machine["id"] + """-exit'
-                    onclick="toggle_exit(""" + exit_routes[0] + """, """ + exit_routes[1] + """, '""" + machine["id"] + """-exit', '""" + str(exit_route_enabled) + """', 'machines')">
-                    退出路由
+                routes = routes+""" <p 
+                    class='waves-effect waves-light btn-small """+exit_enabled_color+""" lighten-2 tooltipped'
+                    data-position='top' data-tooltip='Click to """+exit_tooltip+"""'
+                    id='"""+machine["id"]+"""-exit'
+                    onclick="toggle_exit("""+exit_routes[0]+""", """+exit_routes[1]+""", '"""+machine["id"]+"""-exit', '"""+str(exit_route_enabled)+"""', 'machines')">
+                    Exit Route
                 </p>
                 """
-
 
             # Check if the route has another enabled identical route.  
             # Check all routes from the current machine...
@@ -342,12 +320,12 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
                         color_index   = failover_pair_prefixes.index(str(route["prefix"]))
                         route_enabled = helper.get_color(color_index, "failover")
                         route_tooltip = 'disable'
-                    routes = routes + """ <p 
-                        class='waves-effect waves-light btn-small """ + route_enabled + """ lighten-2 tooltipped'
-                        data-position='top' data-tooltip='点击以""" + route_tooltip + """（故障转移对）'
-                        id='""" + route['id'] + """'
-                        onclick="toggle_failover_route(""" + route['id'] + """, '""" + str(route['enabled']) + """', '""" + str(route_enabled_color) + """')">
-                        """ + route['prefix'] + """
+                    routes = routes+""" <p 
+                        class='waves-effect waves-light btn-small """+route_enabled+""" lighten-2 tooltipped'
+                        data-position='top' data-tooltip='Click to """+route_tooltip+""" (Failover Pair)'
+                        id='"""+route['id']+"""'
+                        onclick="toggle_failover_route("""+route['id']+""", '"""+str(route['enabled'])+"""', '"""+str(route_enabled_color)+"""')">
+                        """+route['prefix']+"""
                     </p>
                     """
                     
@@ -361,42 +339,40 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
                     if route["enabled"]:
                         route_enabled = "green"
                         route_tooltip = 'disable'
-                    routes = routes + """ <p 
-                        class='waves-effect waves-light btn-small """ + route_enabled + """ lighten-2 tooltipped'
-                        data-position='top' data-tooltip='点击以""" + route_tooltip + """'
-                        id='""" + route['id'] + """'
-                        onclick="toggle_route(""" + route['id'] + """, '""" + str(route['enabled']) + """', 'machines')">
-                        """ + route['prefix'] + """
+                    routes = routes+""" <p 
+                        class='waves-effect waves-light btn-small """+route_enabled+""" lighten-2 tooltipped'
+                        data-position='top' data-tooltip='Click to """+route_tooltip+"""'
+                        id='"""+route['id']+"""'
+                        onclick="toggle_route("""+route['id']+""", '"""+str(route['enabled'])+"""', 'machines')">
+                        """+route['prefix']+"""
                     </p>
                     """
-                    routes = routes + "</p></li>"
-
+            routes = routes+"</p></li>"
 
     # Get machine tags
     tag_array = ""
     for tag in machine["forcedTags"]: 
         tag_array = tag_array+"{tag: '"+tag[4:]+"'}, "
-tags = """
+    tags = """
         <li class="collection-item avatar">
-            <i class="material-icons circle tooltipped" data-position="right" data-tooltip="刷新页面后，空格将被替换为破折号（-）">label</i>
-            <span class="title">标签</span>
-            <p><div style='margin: 0px' class='chips' id='""" + machine["id"] + """-tags'></div></p>
+            <i class="material-icons circle tooltipped" data-position="right" data-tooltip="Spaces will be replaced with a dash (-) upon page refresh">label</i>
+            <span class="title">Tags</span>
+            <p><div style='margin: 0px' class='chips' id='"""+machine["id"]+"""-tags'></div></p>
         </li>
         <script>
             window.addEventListener('load', 
                 function() { 
                     var instances = M.Chips.init ( 
-                        document.getElementById('""" + machine['id'] + """-tags'),  ({
-                            data:[""" + tag_array + """], 
-                            onChipDelete() { delete_chip(""" + machine["id"] + """, this.chipsData) }, 
-                            onChipAdd()    { add_chip(""" + machine["id"] + """,    this.chipsData) }
+                        document.getElementById('"""+machine['id']+"""-tags'),  ({
+                            data:["""+tag_array+"""], 
+                            onChipDelete() { delete_chip("""+machine["id"]+""", this.chipsData) }, 
+                            onChipAdd()    { add_chip("""+machine["id"]+""",    this.chipsData) }
                         }) 
                     );
                 }, false
             )
         </script>
         """
-
 
     # Get the machine IP's
     machine_ips = "<ul>"
@@ -454,11 +430,11 @@ tags = """
     user_color = helper.get_color(int(machine["user"]["id"]))
 
     # Generate the various badges:
-status_badge      = "<i class='material-icons left tooltipped " + text_color + "' data-position='top' data-tooltip='上次在线时间：" + last_seen_print + "' id='" + machine["id"] + "-status'>fiber_manual_record</i>"
-user_badge        = "<span class='badge ipinfo " + user_color + " white-text hide-on-small-only' id='" + machine["id"] + "-ns-badge'>" + machine["user"]["name"] + "</span>"
-exit_node_badge   = "" if not exit_route_enabled else "<span class='badge grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器已启用出口路由。'>出口</span>"
-ha_route_badge    = "" if not ha_enabled         else "<span class='badge blue-grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器已启用高可用性（故障转移）路由。'>HA</span>"
-expiration_badge  = "" if not expiring_soon      else "<span class='badge red white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器即将到期。'>即将到期！</span>"
+    status_badge      = "<i class='material-icons left tooltipped " + text_color + "' data-position='top' data-tooltip='Last Seen:  "+last_seen_print+"' id='"+machine["id"]+"-status'>fiber_manual_record</i>"
+    user_badge        = "<span class='badge ipinfo " + user_color + " white-text hide-on-small-only' id='"+machine["id"]+"-ns-badge'>"+machine["user"]["name"]+"</span>"
+    exit_node_badge   = "" if not exit_route_enabled else "<span class='badge grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='This machine has an enabled exit route.'>Exit</span>"
+    ha_route_badge    = "" if not ha_enabled         else "<span class='badge blue-grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='This machine has an enabled High Availabiilty (Failover) route.'>HA</span>"
+    expiration_badge  = "" if not expiring_soon      else "<span class='badge red white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='This machine expires soon.'>Expiring!</span>"
 
     machine_content[idx] = (str(render_template(
         'machines_card.html', 
@@ -565,20 +541,19 @@ def build_preauth_key_table(user_name):
     api_key        = headscale.get_api_key()
 
     preauth_keys = headscale.get_preauth_keys(url, api_key, user_name)
-preauth_keys_collection = """<li class="collection-item avatar">
+    preauth_keys_collection = """<li class="collection-item avatar">
             <span
                 class='badge grey lighten-2 btn-small' 
                 onclick='toggle_expired()'
-            >切换已过期</span>
+            >Toggle Expired</span>
             <span 
                 href="#card_modal" 
                 class='badge grey lighten-2 btn-small modal-trigger' 
                 onclick="load_modal_add_preauth_key('"""+user_name+"""')"
-            >添加预授权密钥</span>
+            >Add PreAuth Key</span>
             <i class="material-icons circle">vpn_key</i>
-            <span class="title">预授权密钥</span>
+            <span class="title">PreAuth Keys</span>
             """
-
     if len(preauth_keys["preAuthKeys"]) == 0: preauth_keys_collection += "<p>No keys defined for this user</p>"
     if len(preauth_keys["preAuthKeys"]) > 0:
         preauth_keys_collection += """
@@ -586,16 +561,15 @@ preauth_keys_collection = """<li class="collection-item avatar">
                     <thead>
                         <tr>
                             <td>ID</td>
-                            <td class='tooltipped' data-tooltip='点击授权密钥前缀将其复制到剪贴板'>密钥前缀</td>
-                            <td><center>可重复使用</center></td>
-                            <td><center>已使用</center></td>
-                            <td><center>临时的</center></td>
-                            <td><center>可用的</center></td>
-                            <td><center>操作</center></td>
+                            <td class='tooltipped' data-tooltip='Click an Auth Key Prefix to copy it to the clipboard'>Key Prefix</td>
+                            <td><center>Reusable</center></td>
+                            <td><center>Used</center></td>
+                            <td><center>Ephemeral</center></td>
+                            <td><center>Usable</center></td>
+                            <td><center>Actions</center></td>
                         </tr>
                     </thead>
                 """
-
     for key in preauth_keys["preAuthKeys"]:
         # Get the key expiration date and compare it to now to check if it's expired:
         # Set the current timezone and local time
@@ -618,8 +592,8 @@ preauth_keys_collection = """<li class="collection-item avatar">
         btn_usable    = "<i class='pulse material-icons tiny green-text text-darken-1'>fiber_manual_record</i>"  if key_usable       else ""
 
         # Other buttons:
-        btn_delete    = "<span href='#card_modal' data-tooltip='过期此预授权密钥' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\""+user_name+"\", \""+str(key["key"])+"\")'>过期</span>" if key_usable else ""
-        tooltip_data  = "到期时间:  "+expiration_time
+        btn_delete    = "<span href='#card_modal' data-tooltip='Expire this PreAuth Key' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\""+user_name+"\", \""+str(key["key"])+"\")'>Expire</span>" if key_usable else ""
+        tooltip_data  = "Expiration:  "+expiration_time
 
         # TR ID will look like "1-albert-tr"
         preauth_keys_collection = preauth_keys_collection+"""
@@ -640,24 +614,24 @@ preauth_keys_collection = """<li class="collection-item avatar">
     return preauth_keys_collection
 
 def oidc_nav_dropdown(user_name, email_address, name):
-    app.logger.info("OIDC已启用。构建OIDC导航下拉菜单")
+    app.logger.info("OIDC is enabled.  Building the OIDC nav dropdown")
     html_payload = """
-        <!-- OIDC下拉菜单结构 -->
+        <!-- OIDC Dropdown Structure -->
         <ul id="dropdown1" class="dropdown-content dropdown-oidc">
             <ul class="collection dropdown-oidc-collection">
                 <li class="collection-item dropdown-oidc-avatar avatar">
                     <i class="material-icons circle">email</i>
-                    <span class="dropdown-oidc-title title">电子邮件</span>
+                    <span class="dropdown-oidc-title title">Email</span>
                     <p>"""+email_address+"""</p>
                 </li>
                 <li class="collection-item dropdown-oidc-avatar avatar">
                     <i class="material-icons circle">person_outline</i>
-                    <span class="dropdown-oidc-title title">用户名</span>
+                    <span class="dropdown-oidc-title title">Username</span>
                     <p>"""+user_name+"""</p>
                 </li>
             </ul>
         <li class="divider"></li>
-            <li><a href="logout"><i class="material-icons left">exit_to_app</i> 退出</a></li>
+            <li><a href="logout"><i class="material-icons left">exit_to_app</i> Logout</a></li>
         </ul>
         <li>
             <a class="dropdown-trigger" href="#!" data-target="dropdown1">
@@ -669,17 +643,16 @@ def oidc_nav_dropdown(user_name, email_address, name):
 
 def oidc_nav_mobile(user_name, email_address, name):
     html_payload = """
-         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>退出</a></li>
+         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>Logout</a></li>
     """
     return Markup(html_payload)
 
 def render_search():
     html_payload = """
-    <li role="menu-item" class="tooltipped" data-position="bottom" data-tooltip="搜索" onclick="show_search()">
+    <li role="menu-item" class="tooltipped" data-position="bottom" data-tooltip="Search" onclick="show_search()">
         <a href="#"><i class="material-icons">search</i></a>
     </li>
     """
-
     return Markup(html_payload)
 
 def render_routes():
@@ -704,9 +677,9 @@ def render_routes():
     failover_content = ""
     exit_content     = ""
 
-    route_title='<span class="card-title">路由</span>'
-    failover_title='<span class="card-title">故障转移路由</span>'
-    exit_title='<span class="card-title">退出路由</span>'
+    route_title='<span class="card-title">Routes</span>'
+    failover_title='<span class="card-title">Failover Routes</span>'
+    exit_title='<span class="card-title">Exit Routes</span>'
 
     markup_pre = """
     <div class="row">
@@ -724,20 +697,19 @@ def render_routes():
     """
 
     ##############################################################################################
-    # 步骤 1：获取所有非退出和非故障转移路由：
+    # Step 1:  Get all non-exit and non-failover routes:
     route_content = markup_pre+route_title
     route_content += """<p><table>
     <thead>
         <tr>
             <th>ID       </th>
-            <th>设备    </th>
-            <th>路由    </th>
-            <th width="60px">启用</th>
+            <th>Machine  </th>
+            <th>Route    </th>
+            <th width="60px">Enabled</th>
         </tr>
     </thead>
     <tbody>
     """
-
     for route in all_routes["routes"]:
         # Get relevant info:
         route_id    = route["id"]
