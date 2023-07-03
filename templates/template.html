@@ -20,12 +20,57 @@
       <meta name="msapplication-TileColor" content="#ffffff">
       <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
       <meta name="theme-color" content="#ffffff">
-
+      <script>
+         // 当主页面内容加载完成后逐渐隐藏缓冲界面
+         window.addEventListener('DOMContentLoaded', function() {
+           var loadingScreen = document.getElementById('loading-screen');
+           loadingScreen.classList.add('hide-loading-screen');
+           setTimeout(function() {
+             loadingScreen.style.display = 'none';
+           }, 500); // 等待0.5秒后完全隐藏缓冲界面
+         });
+       </script>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
       <!-- CSS and Icons -->
       <link href="static/css/materialize.min.css" type="text/css" rel="stylesheet"/> 
       <link href="static/css/overrides.css"   type="text/css" rel="stylesheet"/>
       <style>
+           /* 缓冲界面的样式 */
+  #loading-screen {
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    background-color: #f2f2f2;
+  }
+
+  /* 隐藏缓冲界面的样式 */
+  .hide-loading-screen {
+    opacity: 0;
+  }
+
+  /* 文本动画的样式 */
+  .loading-animation {
+    font-size: 24px;
+    font-weight: bold;
+    animation: blink 1s infinite;
+  }
+
+  /* 闪烁动画的关键帧 */
+  @keyframes blink {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
        /* fallback */
           @font-face {
              font-family: 'Material Icons';
@@ -53,6 +98,11 @@
       </style>
    </head>
    <body>
+      <div id="loading-screen">
+         <!-- 文本动画 -->
+         <p class="loading-animation">Loading...</p>
+       </div>
+      <div id="main-content">
       <nav>
          <div class="nav-wrapper {{ COLOR_NAV }}">
            <div id="nav-search" class="nav-search hidden">
@@ -118,6 +168,7 @@
          <a href="#!" class="modal-close btn-flat">取消</a>
       </div>
    </div>
+</div>
    </body>
    <!-- JavaScript / jQuery -->
     <script type="text/javascript" src="static/js/jquery-2.2.4.min.js"></script>
