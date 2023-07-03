@@ -11,7 +11,6 @@
                 {{ machine_id }}. {{ given_name }}
             </span>
         </div>
-            </span>
         <div class="col s4 m6 activator">
             {{ user_badge       }}
             {{ exit_node_badge  }}
@@ -23,58 +22,58 @@
         <ul class="collection">
             <li class="collection-item avatar">
                 <i class="material-icons circle">settings</i>
-                <span class="title">Machine Actions</span>
+                <span class="title">机器操作</span>
                 <p class="hide-on-small-only">
-                    <a href="#card_modal" onclick='load_modal_rename_machine( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="Rename this machine.">Rename</a>
-                    <a href="#card_modal" onclick='load_modal_move_machine  ( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="Move this machine to another user.">Move</a>
-                    <a href="#card_modal" onclick='load_modal_delete_machine( "{{ machine_id }}" )' class="modal-trigger red waves-effect waves-light btn-small tooltipped" data-tooltip="Remove this machine.">Delete</a>
+                    <a href="#card_modal" onclick='load_modal_rename_machine( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="重命名该机器。">重命名</a>
+                    <a href="#card_modal" onclick='load_modal_move_machine  ( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="将该机器移动到其他用户。">移动</a>
+                    <a href="#card_modal" onclick='load_modal_delete_machine( "{{ machine_id }}" )' class="modal-trigger red waves-effect waves-light btn-small tooltipped" data-tooltip="删除该机器。">删除</a>
                 </p>
                 <p class="show-on-small hide-on-med-and-up hide-on-large-only hide-on-med-only">
                     <ul class="show-on-small hide-on-med-and-up hide-on-large-only hide-on-med-only">
-                        <li><a href="#card_modal" onclick='load_modal_rename_machine( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="Rename this machine.">Rename</a></li>
-                        <li><a href="#card_modal" onclick='load_modal_move_machine  ( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="Move this machine to another user.">Move</a></li>
-                        <li><a href="#card_modal" onclick='load_modal_delete_machine( "{{ machine_id }}" )' class="modal-trigger red waves-effect waves-light btn-small tooltipped" data-tooltip="Remove this machine.">Delete</a></li>
+                        <li><a href="#card_modal" onclick='load_modal_rename_machine( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="重命名该机器。">重命名</a></li>
+                        <li><a href="#card_modal" onclick='load_modal_move_machine  ( "{{ machine_id }}" )' class="modal-trigger waves-effect waves-light btn-small tooltipped"     data-tooltip="将该机器移动到其他用户。">移动</a></li>
+                        <li><a href="#card_modal" onclick='load_modal_delete_machine( "{{ machine_id }}" )' class="modal-trigger red waves-effect waves-light btn-small tooltipped" data-tooltip="删除该机器。">删除</a></li>
                     </ul>
                 </p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">domain</i>
-                <span class="title">Hostname</span>
+                <span class="title">主机名</span>
                 <p> {{ hostname }} </p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">language</i>
-                <span class="title">User</span>
+                <span class="title">用户</span>
                 <p id="{{ machine_id }}-user-container">{{ ns_name }}</p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">network_wifi</i>
-                <span class="title">IP Addresses</span>
+                <span class="title">IP 地址</span>
                 <p>{{ machine_ips}}</p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">access_time</i>
-                <span class="title">Last Seen</span>
+                <span class="title">最后在线</span>
                 <p>{{ last_seen_time}}</p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">update</i>
-                <span class="title">Last Update</span>
+                <span class="title">最后更新</span>
                 <p>{{ last_update_time }}</p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">history</i>
-                <span class="title">Created At</span>
+                <span class="title">创建时间</span>
                 <p>{{ created_time }}</p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">hourglass_empty</i>
-                <span class="title">Expiration</span>
+                <span class="title">过期时间</span>
                 <p>{{ expiry_time }}</p>
             </li>
             <li class="collection-item avatar">
                 <i class="material-icons circle">key</i>
-                <span class="title">PreAuth Key Prefix</span>
+                <span class="title">预授权密钥前缀</span>
                 <p>{{ preauth_key }}</p>
             </li>
             {{ advertised_routes }}
