@@ -124,79 +124,75 @@ def render_overview():
         <div class="col s1"></div>
         <div class="col s10">
             <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>服务器统计信息</h4></li>
-                <li class="collection-item"><div>已添加的机器数       <div class="secondary-content overview-page">""" + str(machines_count) + """</div></div></li>
-                <li class="collection-item"><div>已添加的用户数       <div class="secondary-content overview-page">""" + str(user_count) + """</div></div></li>
-                <li class="collection-item"><div>可用的预验证密钥数   <div class="secondary-content overview-page">""" + str(usable_keys_count) + """</div></div></li>
-                <li class="collection-item"><div>已启用/总计路由数    <div class="secondary-content overview-page">""" + str(enabled_routes) + """/""" + str(total_routes) + """</div></div></li>
-                <li class="collection-item"><div>已启用/总计出口数    <div class="secondary-content overview-page">""" + str(exits_enabled_count) + """/""" + str(exits_count) + """</div></div></li>
+                <li class="collection-header"><h4>Server Statistics</h4></li>
+                <li class="collection-item"><div>Machines Added       <div class="secondary-content overview-page">"""+ str(machines_count)                               +"""</div></div></li>
+                <li class="collection-item"><div>Users Added          <div class="secondary-content overview-page">"""+ str(user_count)                                   +"""</div></div></li>
+                <li class="collection-item"><div>Usable Preauth Keys  <div class="secondary-content overview-page">"""+ str(usable_keys_count)                            +"""</div></div></li>
+                <li class="collection-item"><div>Enabled/Total Routes <div class="secondary-content overview-page">"""+ str(enabled_routes) +"""/"""+str(total_routes)    +"""</div></div></li>
+                <li class="collection-item"><div>Enabled/Total Exits  <div class="secondary-content overview-page">"""+ str(exits_enabled_count) +"""/"""+str(exits_count)+"""</div></div></li>
             </ul>
         </div>
         <div class="col s1"></div>
     </div>
     """
-
     general_content = """
     <div class="row">
         <div class="col s1"></div>
         <div class="col s10">
             <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>常规信息</h4></li>
-                <li class="collection-item"><div>IP前缀                       <div class="secondary-content overview-page">""" + ip_prefixes + """</div></div></li>
-                <li class="collection-item"><div>服务器URL                    <div class="secondary-content overview-page">""" + server_url + """</div></div></li>
-                <li class="collection-item"><div>禁用更新检查                  <div class="secondary-content overview-page">""" + disable_check_updates + """</div></div></li>
-                <li class="collection-item"><div>临时节点不活动超时时间        <div class="secondary-content overview-page">""" + ephemeral_node_inactivity_timeout + """</div></div></li>
-                <li class="collection-item"><div>节点更新检查间隔              <div class="secondary-content overview-page">""" + node_update_check_interval + """</div></div></li>
+                <li class="collection-header"><h4>General</h4></li>
+                <li class="collection-item"><div>IP Prefixes                       <div class="secondary-content overview-page">"""+ ip_prefixes                       +"""</div></div></li>
+                <li class="collection-item"><div>Server URL                        <div class="secondary-content overview-page">"""+ server_url                        +"""</div></div></li>
+                <li class="collection-item"><div>Updates Disabled                  <div class="secondary-content overview-page">"""+ disable_check_updates             +"""</div></div></li>
+                <li class="collection-item"><div>Ephemeral Node Inactivity Timeout <div class="secondary-content overview-page">"""+ ephemeral_node_inactivity_timeout +"""</div></div></li>
+                <li class="collection-item"><div>Node Update Check Interval        <div class="secondary-content overview-page">"""+ node_update_check_interval        +"""</div></div></li>
             </ul>
         </div>
         <div class="col s1"></div>
     </div>
     """
-
     oidc_content = """
     <div class="row">
         <div class="col s1"></div>
         <div class="col s10">
             <ul class="collection with-header z-depth-1">
                 <li class="collection-header"><h4>Headscale OIDC</h4></li>
-                <li class="collection-item"><div>发行者                <div class="secondary-content overview-page">""" + issuer + """</div></div></li>
-                <li class="collection-item"><div>客户端ID             <div class="secondary-content overview-page">""" + client_id + """</div></div></li>
-                <li class="collection-item"><div>范围                 <div class="secondary-content overview-page">""" + scope + """</div></div></li>
-                <li class="collection-item"><div>使用OIDC令牌过期时间  <div class="secondary-content overview-page">""" + use_expiry_from_token + """</div></div></li>
-                <li class="collection-item"><div>过期时间             <div class="secondary-content overview-page">""" + expiry + """</div></div></li>
+                <li class="collection-item"><div>Issuer                <div class="secondary-content overview-page">"""+ issuer                +"""</div></div></li>
+                <li class="collection-item"><div>Client ID             <div class="secondary-content overview-page">"""+ client_id             +"""</div></div></li>
+                <li class="collection-item"><div>Scope                 <div class="secondary-content overview-page">"""+ scope                 +"""</div></div></li>
+                <li class="collection-item"><div>Use OIDC Token Expiry <div class="secondary-content overview-page">"""+ use_expiry_from_token +"""</div></div></li>
+                <li class="collection-item"><div>Expiry                <div class="secondary-content overview-page">"""+ expiry                +"""</div></div></li>
             </ul>
         </div>
         <div class="col s1"></div>
     </div>
     """
-
     derp_content = """
     <div class="row">
         <div class="col s1"></div>
         <div class="col s10">
             <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>内嵌DERP</h4></li>
-                <li class="collection-item"><div>已启用     <div class="secondary-content overview-page">""" + enabled + """</div></div></li>
-                <li class="collection-item"><div>区域ID   <div class="secondary-content overview-page">""" + region_id + """</div></div></li>
-                <li class="collection-item"><div>区域代码 <div class="secondary-content overview-page">""" + region_code + """</div></div></li>
-                <li class="collection-item"><div>区域名称 <div class="secondary-content overview-page">""" + region_name + """</div></div></li>
-                <li class="collection-item"><div>STUN地址<div class="secondary-content overview-page">""" + stun_listen_addr + """</div></div></li>
+                <li class="collection-header"><h4>Embedded DERP</h4></li>
+                <li class="collection-item"><div>Enabled     <div class="secondary-content overview-page">"""+ enabled          +"""</div></div></li>
+                <li class="collection-item"><div>Region ID   <div class="secondary-content overview-page">"""+ region_id        +"""</div></div></li>
+                <li class="collection-item"><div>Region Code <div class="secondary-content overview-page">"""+ region_code      +"""</div></div></li>
+                <li class="collection-item"><div>Region Name <div class="secondary-content overview-page">"""+ region_name      +"""</div></div></li>
+                <li class="collection-item"><div>STUN Address<div class="secondary-content overview-page">"""+ stun_listen_addr +"""</div></div></li>
             </ul>
         </div>
         <div class="col s1"></div>
     </div>
     """
-
     dns_content = """
     <div class="row">
         <div class="col s1"></div>
         <div class="col s10">
             <ul class="collection with-header z-depth-1">
                 <li class="collection-header"><h4>DNS</h4></li>
-                <li class="collection-item"><div>DNS域名服务器 <div class="secondary-content overview-page">""" + nameservers + """</div></div></li>
-                <li class="collection-item"><div>MagicDNS        <div class="secondary-content overview-page">""" + magic_dns + """</div></div></li>
-                <li class="collection-item"><div>搜索域名  <div class="secondary-content overview-page">""" + domains + """</div></div></li>
-                <li class="collection-item"><div>基础域名     <div class="secondary-content overview-page">""" + base_domain + """</div></div></li>
+                <li class="collection-item"><div>DNS Nameservers <div class="secondary-content overview-page">"""+  nameservers  +"""</div></div></li>
+                <li class="collection-item"><div>MagicDNS        <div class="secondary-content overview-page">"""+  magic_dns    +"""</div></div></li>
+                <li class="collection-item"><div>Search Domains  <div class="secondary-content overview-page">"""+  domains      +"""</div></div></li>
+                <li class="collection-item"><div>Base Domain     <div class="secondary-content overview-page">"""+  base_domain  +"""</div></div></li>
             </ul>
         </div>
         <div class="col s1"></div>
@@ -273,7 +269,7 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
             routes = """
                 <li class="collection-item avatar">
                     <i class="material-icons circle">directions</i>
-                    <span class="title">路由</span>
+                    <span class="title">Routes</span>
                     <p>
             """
             # app.logger.debug("Pulled Routes Dump:  "+str(pulled_routes))
@@ -299,12 +295,11 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
 
             # Print the button for the Exit routes:
             if exit_route_found:
-                routes = routes + """ <p
-                    class='waves-effect waves-light btn-small """ + exit_enabled_color + """ lighten-2 tooltipped'
-                    data-position='top' data-tooltip='点击 """ + exit_tooltip + """'
-                    id='""" + machine["id"] + """-exit'
-                    onclick="toggle_exit(""" + exit_routes[0] + """, """ + exit_routes[1] + """, '""" + machine[
-                    "id"] + """-exit', '""" + str(exit_route_enabled) + """', 'machines')">
+                routes = routes+""" <p 
+                    class='waves-effect waves-light btn-small """+exit_enabled_color+""" lighten-2 tooltipped'
+                    data-position='top' data-tooltip='Click to """+exit_tooltip+"""'
+                    id='"""+machine["id"]+"""-exit'
+                    onclick="toggle_exit("""+exit_routes[0]+""", """+exit_routes[1]+""", '"""+machine["id"]+"""-exit', '"""+str(exit_route_enabled)+"""', 'machines')">
                     Exit Route
                 </p>
                 """
@@ -341,13 +336,12 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
                         color_index   = failover_pair_prefixes.index(str(route["prefix"]))
                         route_enabled = helper.get_color(color_index, "failover")
                         route_tooltip = 'disable'
-                    routes = routes + """ <p
-                        class='waves-effect waves-light btn-small """ + route_enabled + """ lighten-2 tooltipped'
-                        data-position='top' data-tooltip='点击 """ + route_tooltip + """ (Failover Pair)'
-                        id='""" + route['id'] + """'
-                        onclick="toggle_failover_route(""" + route['id'] + """, '""" + str(route['enabled']) + """', '""" + str(
-                        route_enabled_color) + """')">
-                        """ + route['prefix'] + """
+                    routes = routes+""" <p 
+                        class='waves-effect waves-light btn-small """+route_enabled+""" lighten-2 tooltipped'
+                        data-position='top' data-tooltip='Click to """+route_tooltip+""" (Failover Pair)'
+                        id='"""+route['id']+"""'
+                        onclick="toggle_failover_route("""+route['id']+""", '"""+str(route['enabled'])+"""', '"""+str(route_enabled_color)+"""')">
+                        """+route['prefix']+"""
                     </p>
                     """
                     
@@ -359,13 +353,11 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
                     route_enabled = "red"
                     route_tooltip = 'enable'
                     if route["enabled"]:
-                       
-
                         route_enabled = "green"
                         route_tooltip = 'disable'
                     routes = routes+""" <p 
                         class='waves-effect waves-light btn-small """+route_enabled+""" lighten-2 tooltipped'
-                        data-position='top' data-tooltip='点击 """+route_tooltip+"""'
+                        data-position='top' data-tooltip='Click to """+route_tooltip+"""'
                         id='"""+route['id']+"""'
                         onclick="toggle_route("""+route['id']+""", '"""+str(route['enabled'])+"""', 'machines')">
                         """+route['prefix']+"""
@@ -379,7 +371,7 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
         tag_array = tag_array+"{tag: '"+tag[4:]+"'}, "
     tags = """
         <li class="collection-item avatar">
-            <i class="material-icons circle tooltipped" data-position="right" data-tooltip="空格在页面刷新时将被替换为破折号（-）。">label</i>
+            <i class="material-icons circle tooltipped" data-position="right" data-tooltip="Spaces will be replaced with a dash (-) upon page refresh">label</i>
             <span class="title">Tags</span>
             <p><div style='margin: 0px' class='chips' id='"""+machine["id"]+"""-tags'></div></p>
         </li>
@@ -532,7 +524,6 @@ def render_machines_cards():
 
     return Markup(content)
 
-
 def render_users_cards():
     app.logger.info("Rendering Users cards")
     url       = headscale.get_url()
@@ -567,24 +558,22 @@ def build_preauth_key_table(user_name):
 
     preauth_keys = headscale.get_preauth_keys(url, api_key, user_name)
     preauth_keys_collection = """<li class="collection-item avatar">
-        <span
-            class='badge grey lighten-2 btn-small' 
-            onclick='toggle_expired()'
-        >切换已过期</span>
-        <span 
-            href="#card_modal" 
-            class='badge grey lighten-2 btn-small modal-trigger' 
-            onclick="load_modal_add_preauth_key('""" + user_name + """')"
-        >添加预授权密钥</span>
-        <i class="material-icons circle">vpn_key</i>
-        <span class="title">预授权密钥</span>
-        """
-
-    if len(preauth_keys["preAuthKeys"]) == 0:
-        preauth_keys_collection += "<p>No keys defined for this user</p>"
+            <span
+                class='badge grey lighten-2 btn-small' 
+                onclick='toggle_expired()'
+            >Toggle Expired</span>
+            <span 
+                href="#card_modal" 
+                class='badge grey lighten-2 btn-small modal-trigger' 
+                onclick="load_modal_add_preauth_key('"""+user_name+"""')"
+            >Add PreAuth Key</span>
+            <i class="material-icons circle">vpn_key</i>
+            <span class="title">PreAuth Keys</span>
+            """
+    if len(preauth_keys["preAuthKeys"]) == 0: preauth_keys_collection += "<p>No keys defined for this user</p>"
     if len(preauth_keys["preAuthKeys"]) > 0:
         preauth_keys_collection += """
-                <table class="responsive-table striped" id='""" + user_name + """-preauthkey-table'>
+                <table class="responsive-table striped" id='"""+user_name+"""-preauthkey-table'>
                     <thead>
                         <tr>
                             <td>ID</td>
@@ -613,30 +602,25 @@ def build_preauth_key_table(user_name):
         # Class for the javascript function to look for to toggle the hide function
         hide_expired = "expired-row" if not key_usable else ""
 
-        btn_reusable = "<i class='pulse material-icons tiny blue-text text-darken-1'>fiber_manual_record</i>" if key[
-            "reusable"] else ""
-        btn_ephemeral = "<i class='pulse material-icons tiny red-text text-darken-1'>fiber_manual_record</i>" if key[
-            "ephemeral"] else ""
-        btn_used = "<i class='pulse material-icons tiny yellow-text text-darken-1'>fiber_manual_record</i>" if key[
-            "used"] else ""
-        btn_usable = "<i class='pulse material-icons tiny green-text text-darken-1'>fiber_manual_record</i>" if key_usable else ""
+        btn_reusable  = "<i class='pulse material-icons tiny blue-text text-darken-1'>fiber_manual_record</i>"   if key["reusable"]  else ""
+        btn_ephemeral = "<i class='pulse material-icons tiny red-text text-darken-1'>fiber_manual_record</i>"    if key["ephemeral"] else ""
+        btn_used      = "<i class='pulse material-icons tiny yellow-text text-darken-1'>fiber_manual_record</i>" if key["used"]      else ""
+        btn_usable    = "<i class='pulse material-icons tiny green-text text-darken-1'>fiber_manual_record</i>"  if key_usable       else ""
 
         # Other buttons:
-        btn_delete = "<span href='#card_modal' data-tooltip='使该预授权密钥过期' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\"" + user_name + "\", \"" + str(
-            key["key"]) + "\")'>使过期</span>" if key_usable else ""
-        tooltip_data = "过期时间：" + expiration_time
+        btn_delete    = "<span href='#card_modal' data-tooltip='Expire this PreAuth Key' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\""+user_name+"\", \""+str(key["key"])+"\")'>Expire</span>" if key_usable else ""
+        tooltip_data  = "Expiration:  "+expiration_time
 
         # TR ID will look like "1-albert-tr"
-        preauth_keys_collection = preauth_keys_collection + """
-            <tr id='""" + key["id"] + """-""" + user_name + """-tr' class='""" + hide_expired + """'>
-                <td>""" + str(key["id"]) + """</td>
-                <td  onclick=copy_preauth_key('""" + str(key["key"]) + """') class='tooltipped' data-tooltip='""" + tooltip_data + """'>""" + str(
-            key["key"])[0:10] + """</td>
-                <td><center>""" + btn_reusable + """</center></td>
-                <td><center>""" + btn_used + """</center></td>
-                <td><center>""" + btn_ephemeral + """</center></td>
-                <td><center>""" + btn_usable + """</center></td>
-                <td><center>""" + btn_delete + """</center></td>
+        preauth_keys_collection = preauth_keys_collection+"""
+            <tr id='"""+key["id"]+"""-"""+user_name+"""-tr' class='"""+hide_expired+"""'>
+                <td>"""+str(key["id"])+"""</td>
+                <td  onclick=copy_preauth_key('"""+str(key["key"])+"""') class='tooltipped' data-tooltip='"""+tooltip_data+"""'>"""+str(key["key"])[0:10]+"""</td>
+                <td><center>"""+btn_reusable+"""</center></td>
+                <td><center>"""+btn_used+"""</center></td>
+                <td><center>"""+btn_ephemeral+"""</center></td>
+                <td><center>"""+btn_usable+"""</center></td>
+                <td><center>"""+btn_delete+"""</center></td>
             </tr>
         """
 
@@ -648,42 +632,40 @@ def build_preauth_key_table(user_name):
 def oidc_nav_dropdown(user_name, email_address, name):
     app.logger.info("OIDC is enabled.  Building the OIDC nav dropdown")
     html_payload = """
-    <!-- OIDC 下拉菜单结构 -->
-    <ul id="dropdown1" class="dropdown-content dropdown-oidc">
-        <ul class="collection dropdown-oidc-collection">
-            <li class="collection-item dropdown-oidc-avatar avatar">
-                <i class="material-icons circle">email</i>
-                <span class="dropdown-oidc-title title">邮箱</span>
-                <p>""" + email_address + """</p>
-            </li>
-            <li class="collection-item dropdown-oidc-avatar avatar">
-                <i class="material-icons circle">person_outline</i>
-                <span class="dropdown-oidc-title title">用户名</span>
-                <p>""" + user_name + """</p>
-            </li>
+        <!-- OIDC Dropdown Structure -->
+        <ul id="dropdown1" class="dropdown-content dropdown-oidc">
+            <ul class="collection dropdown-oidc-collection">
+                <li class="collection-item dropdown-oidc-avatar avatar">
+                    <i class="material-icons circle">email</i>
+                    <span class="dropdown-oidc-title title">Email</span>
+                    <p>"""+email_address+"""</p>
+                </li>
+                <li class="collection-item dropdown-oidc-avatar avatar">
+                    <i class="material-icons circle">person_outline</i>
+                    <span class="dropdown-oidc-title title">Username</span>
+                    <p>"""+user_name+"""</p>
+                </li>
+            </ul>
+        <li class="divider"></li>
+            <li><a href="logout"><i class="material-icons left">exit_to_app</i> Logout</a></li>
         </ul>
-    <li class="divider"></li>
-        <li><a href="logout"><i class="material-icons left">exit_to_app</i> 注销</a></li>
-    </ul>
-    <li>
-        <a class="dropdown-trigger" href="#!" data-target="dropdown1">
-            """ + name + """ <i class="material-icons right">account_circle</i>
-        </a>
-    </li>
-"""
-
+        <li>
+            <a class="dropdown-trigger" href="#!" data-target="dropdown1">
+                """+name+""" <i class="material-icons right">account_circle</i>
+            </a>
+        </li>
+    """
     return Markup(html_payload)
-
 
 def oidc_nav_mobile(user_name, email_address, name):
     html_payload = """
-         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>注销</a></li>
+         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>Logout</a></li>
     """
     return Markup(html_payload)
 
 def render_search():
     html_payload = """
-    <li role="menu-item" class="tooltipped" data-position="bottom" data-tooltip="搜索" onclick="show_search()">
+    <li role="menu-item" class="tooltipped" data-position="bottom" data-tooltip="Search" onclick="show_search()">
         <a href="#"><i class="material-icons">search</i></a>
     </li>
     """
@@ -691,29 +673,29 @@ def render_search():
 
 def render_routes():
     app.logger.info("Rendering Routes page")
-    url = headscale.get_url()
-    api_key = headscale.get_api_key()
-    all_routes = headscale.get_routes(url, api_key)
+    url           = headscale.get_url()
+    api_key       = headscale.get_api_key()
+    all_routes    = headscale.get_routes(url, api_key)
 
     # If there are no routes, just exit:
-    if len(all_routes) == 0:
-        return Markup("<br><br><br><center>没有可显示的路由！</center>")
+    if len(all_routes) == 0: return Markup("<br><br><br><center>There are no routes to display!</center>")
     # Get a list of all Route ID's to iterate through:
     all_routes_id_list = []
     for route in all_routes["routes"]:
         all_routes_id_list.append(route["id"])
         if route["machine"]["name"]:
             app.logger.info("Found route %s / machine: %s", str(route["id"]), route["machine"]["name"])
-        else:
+        else: 
             app.logger.info("Route id %s has no machine associated.", str(route["id"]))
 
-    route_content = ""
-    failover_content = ""
-    exit_content = ""
 
-    route_title = '<span class="card-title">路由</span>'
-    failover_title = '<span class="card-title">故障转移路由</span>'
-    exit_title = '<span class="card-title">退出路由</span>'
+    route_content    = ""
+    failover_content = ""
+    exit_content     = ""
+
+    route_title='<span class="card-title">Routes</span>'
+    failover_title='<span class="card-title">Failover Routes</span>'
+    exit_title='<span class="card-title">Exit Routes</span>'
 
     markup_pre = """
     <div class="row">
@@ -734,38 +716,35 @@ def render_routes():
     # Step 1:  Get all non-exit and non-failover routes:
     route_content = markup_pre+route_title
     route_content += """<p><table>
-<thead>
-    <tr>
-        <th>编号       </th>
-        <th>设备  </th>
-        <th>路由    </th>
-        <th width="60px">启用</th>
-    </tr>
-</thead>
-<tbody>
-
+    <thead>
+        <tr>
+            <th>ID       </th>
+            <th>Machine  </th>
+            <th>Route    </th>
+            <th width="60px">Enabled</th>
+        </tr>
+    </thead>
+    <tbody>
     """
     for route in all_routes["routes"]:
         # Get relevant info:
-        route_id = route["id"]
-        machine = route["machine"]["givenName"]
-        prefix = route["prefix"]
-        is_enabled = route["enabled"]
-        is_primary = route["isPrimary"]
+        route_id    = route["id"]
+        machine     = route["machine"]["givenName"]
+        prefix      = route["prefix"]
+        is_enabled  = route["enabled"]
+        is_primary  = route["isPrimary"]
         is_failover = False
-        is_exit = False
+        is_exit     = False 
 
-        enabled = "<i id='" + route["id"] + "' onclick='toggle_route(" + route["id"] + ", \"True\", \"routes\")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='点击以禁用'>fiber_manual_record</i>"
-        disabled = "<i id='" + route["id"] + "' onclick='toggle_route(" + route["id"] + ", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='点击以启用' >fiber_manual_record</i>"
+        enabled  = "<i id='"+route["id"]+"' onclick='toggle_route("+route["id"]+", \"True\", \"routes\")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='Click to disable'>fiber_manual_record</i>"
+        disabled = "<i id='"+route["id"]+"' onclick='toggle_route("+route["id"]+", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='Click to enable' >fiber_manual_record</i>"
 
         # Set the displays:
-        enabled_display = disabled
+        enabled_display  = disabled
 
-        if is_enabled:
-            enabled_display = enabled
+        if is_enabled:  enabled_display = enabled
         # Check if a prefix is an Exit route:
-        if prefix == "0.0.0.0/0" or prefix == "::/0":
-            is_exit = True
+        if prefix == "0.0.0.0/0" or prefix == "::/0":  is_exit = True
         # Check if a prefix is part of a failover pair:
         for route_check in all_routes["routes"]:
             if not is_exit:
@@ -774,16 +753,16 @@ def render_routes():
                         is_failover = True
 
         if not is_exit and not is_failover and machine != "":
-            # Build a simple table for all non-exit routes:
+        # Build a simple table for all non-exit routes:
             route_content += """
             <tr>
-                <td>""" + str(route_id) + """</td>
-                <td>""" + str(machine) + """</td>
-                <td>""" + str(prefix) + """</td>
-                <td><center>""" + str(enabled_display) + """</center></td>
+                <td>"""+str(route_id         )+"""</td>
+                <td>"""+str(machine          )+"""</td>
+                <td>"""+str(prefix           )+"""</td>
+                <td><center>"""+str(enabled_display  )+"""</center></td>
             </tr>
             """
-    route_content += "</tbody></table></p>" + markup_post
+    route_content += "</tbody></table></p>"+markup_post
 
     ##############################################################################################
     # Step 2:  Get all failover routes only.  Add a separate table per failover prefix
@@ -794,8 +773,8 @@ def render_routes():
         # Get a list of all prefixes for all routes...
         for route_check in all_routes["routes"]:
             # ... that  aren't exit routes... 
-            if route["prefix"] != "0.0.0.0/0" and route["prefix"] != "::/0":
-                # if the current route matches any prefix of any other route...
+            if route["prefix"] !="0.0.0.0/0" and route["prefix"] != "::/0":
+                # if the curren route matches any prefix of any other route...
                 if route["prefix"] == route_check["prefix"]:
                     # and the route ID's are different ...
                     if route["id"] != route_check["id"]:
@@ -807,10 +786,10 @@ def render_routes():
 
     if failover_available:
         # Set up the display code:
-        enabled = "<i class='material-icons green-text text-lighten-2'>fiber_manual_record</i>"
+        enabled  = "<i class='material-icons green-text text-lighten-2'>fiber_manual_record</i>"
         disabled = "<i class='material-icons red-text text-lighten-2'>fiber_manual_record</i>"
 
-        failover_content = markup_pre + failover_title
+        failover_content = markup_pre+failover_title
         # Build the display for failover routes:
         for route_prefix in failover_route_prefix:
             # Get all route ID's associated with the route_prefix:
@@ -820,56 +799,51 @@ def render_routes():
                     route_id_list.append(route["id"])
 
             # Set up the display code:
-            failover_enabled = "<i id='" + str(route_prefix) + "' class='material-icons small left green-text text-lighten-2'>fiber_manual_record</i>"
-            failover_disabled = "<i id='" + str(route_prefix) + "' class='material-icons small left red-text text-lighten-2'>fiber_manual_record</i>"
+            failover_enabled  = "<i id='"+str(route_prefix)+"' class='material-icons small left green-text text-lighten-2'>fiber_manual_record</i>"
+            failover_disabled = "<i id='"+str(route_prefix)+"' class='material-icons small left red-text text-lighten-2'>fiber_manual_record</i>"
 
             failover_display = failover_disabled
             for route_id in route_id_list:
                 # Get the routes index:
                 current_route_index = all_routes_id_list.index(route_id)
-                if all_routes["routes"][current_route_index]["enabled"]:
-                    failover_display = failover_enabled
+                if all_routes["routes"][current_route_index]["enabled"]: failover_display = failover_enabled
+
 
             # Get all route_id's associated with the route prefix:
             failover_content += """<p>
-            <h5>""" + failover_display + """</h5><h5>""" + str(route_prefix) + """</h5>
-        <table>
-            <thead>
-                <tr>
-                    <th>设备</th>
-                    <th width="60px">启用</th>
-                    <th width="60px">主要</th>
-                </tr>
-            </thead>
-            <tbody>
-
+            <h5>"""+failover_display+"""</h5><h5>"""+str(route_prefix)+"""</h5>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Machine</th>
+                        <th width="60px">Enabled</th>
+                        <th width="60px">Primary</th>
+                    </tr>
+                </thead>
+                <tbody>
             """
 
             # Build the display:
             for route_id in route_id_list:
                 idx = all_routes_id_list.index(route_id)
 
-                machine = all_routes["routes"][idx]["machine"]["givenName"]
+                machine    = all_routes["routes"][idx]["machine"]["givenName"]
                 machine_id = all_routes["routes"][idx]["machine"]["id"]
                 is_primary = all_routes["routes"][idx]["isPrimary"]
                 is_enabled = all_routes["routes"][idx]["enabled"]
 
                 payload = []
-                for item in route_id_list:
-                    payload.append(int(item))
-
-                app.logger.debug("[%s] Machine:  [%s]  %s : %s / %s", str(route_id), str(machine_id), str(machine),
-                                 str(is_enabled), str(is_primary))
+                for item in route_id_list: payload.append(int(item))
+                 
+                app.logger.debug("[%s] Machine:  [%s]  %s : %s / %s", str(route_id), str(machine_id), str(machine), str(is_enabled), str(is_primary))
                 app.logger.debug(str(all_routes["routes"][idx]))
 
                 # Set up the display code:
-                enabled_display_enabled = "<i id='" + str(route_id) + "' onclick='toggle_failover_route_routespage(" + str(
-                    route_id) + ", \"True\", \"" + str(route_prefix) + "\", " + str(payload) + ")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='Click to disable'>fiber_manual_record</i>"
-                enabled_display_disabled = "<i id='" + str(route_id) + "' onclick='toggle_failover_route_routespage(" + str(
-                    route_id) + ", \"False\", \"" + str(route_prefix) + "\", " + str(payload) + ")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='Click to enable'>fiber_manual_record</i>"
-                primary_display_enabled = "<i id='" + str(route_id) + "-primary' class='material-icons green-text text-lighten-2'>fiber_manual_record</i>"
-                primary_display_disabled = "<i id='" + str(route_id) + "-primary' class='material-icons red-text text-lighten-2'>fiber_manual_record</i>"
-
+                enabled_display_enabled  = "<i id='"+str(route_id)+"' onclick='toggle_failover_route_routespage("+str(route_id)+", \"True\", \""+str(route_prefix)+"\", "+str(payload)+")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='Click to disable'>fiber_manual_record</i>"
+                enabled_display_disabled = "<i id='"+str(route_id)+"' onclick='toggle_failover_route_routespage("+str(route_id)+", \"False\", \""+str(route_prefix)+"\", "+str(payload)+")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='Click to enable'>fiber_manual_record</i>"
+                primary_display_enabled  = "<i id='"+str(route_id)+"-primary' class='material-icons green-text text-lighten-2'>fiber_manual_record</i>"
+                primary_display_disabled = "<i id='"+str(route_id)+"-primary' class='material-icons red-text text-lighten-2'>fiber_manual_record</i>"
+                
                 # Set displays:
                 enabled_display = enabled_display_enabled if is_enabled else enabled_display_disabled
                 primary_display = primary_display_enabled if is_primary else primary_display_disabled
@@ -877,9 +851,9 @@ def render_routes():
                 # Build a simple table for all non-exit routes:
                 failover_content += """
                     <tr>
-                        <td>""" + str(machine) + """</td>
-                        <td><center>""" + str(enabled_display) + """</center></td>
-                        <td><center>""" + str(primary_display) + """</center></td>
+                        <td>"""+str(machine)+"""</td>
+                        <td><center>"""+str(enabled_display)+"""</center></td>
+                        <td><center>"""+str(primary_display)+"""</center></td>
                     </tr>
                     """
             failover_content += "</tbody></table></p>"
@@ -892,21 +866,20 @@ def render_routes():
     for route in all_routes["routes"]:
         # For every exit route found, store the machine name in an array:
         if route["prefix"] == "0.0.0.0/0" or route["prefix"] == "::/0":
-            if route["machine"]["givenName"] not in exit_node_list:
+            if route["machine"]["givenName"] not in exit_node_list: 
                 exit_node_list.append(route["machine"]["givenName"])
 
     # Exit node display building:
     # Display by machine, not by route
-    exit_content = markup_pre + exit_title
+    exit_content = markup_pre+exit_title
     exit_content += """<p><table>
-<thead>
-    <tr>
-        <th>设备</th>
-        <th>启用</th>
-    </tr>
-</thead>
-<tbody>
-
+    <thead>
+        <tr>
+            <th>Machine</th>
+            <th>Enabled</th>
+        </tr>
+    </thead>
+    <tbody>
     """
     # Get exit route ID's for each node in the list: 
     for node in exit_node_list:
@@ -925,10 +898,8 @@ def render_routes():
 
         if exit_available:
             # Set up the display code:
-            enabled = "<i id='" + machine_id + "-exit' onclick='toggle_exit(" + node_exit_route_ids[
-                0] + ", " + node_exit_route_ids[1] + ", \"" + machine_id + "-exit\", \"True\",  \"routes\")' class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='点击以禁用'>fiber_manual_record</i>"
-            disabled = "<i id='" + machine_id + "-exit' onclick='toggle_exit(" + node_exit_route_ids[
-                0] + ", " + node_exit_route_ids[1] + ", \"" + machine_id + "-exit\", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='点击以启用' >fiber_manual_record</i>"
+            enabled  = "<i id='"+machine_id+"-exit' onclick='toggle_exit("+node_exit_route_ids[0]+", "+node_exit_route_ids[1]+", \""+machine_id+"-exit\", \"True\",  \"routes\")' class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='Click to disable'>fiber_manual_record</i>"
+            disabled = "<i id='"+machine_id+"-exit' onclick='toggle_exit("+node_exit_route_ids[0]+", "+node_exit_route_ids[1]+", \""+machine_id+"-exit\", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='Click to enable' >fiber_manual_record</i>"
             # Set the displays:
             enabled_display = enabled if exit_enabled else disabled
 
