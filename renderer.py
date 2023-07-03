@@ -541,35 +541,36 @@ def build_preauth_key_table(user_name):
     api_key        = headscale.get_api_key()
 
     preauth_keys = headscale.get_preauth_keys(url, api_key, user_name)
-    preauth_keys_collection = """<li class="collection-item avatar">
-            <span
-                class='badge grey lighten-2 btn-small' 
-                onclick='toggle_expired()'
-            >Toggle Expired</span>
-            <span 
-                href="#card_modal" 
-                class='badge grey lighten-2 btn-small modal-trigger' 
-                onclick="load_modal_add_preauth_key('"""+user_name+"""')"
-            >Add PreAuth Key</span>
-            <i class="material-icons circle">vpn_key</i>
-            <span class="title">PreAuth Keys</span>
+preauth_keys_collection = """<li class="collection-item avatar">
+        <span
+            class='badge grey lighten-2 btn-small' 
+            onclick='toggle_expired()'
+        >切换已过期</span>
+        <span 
+            href="#card_modal" 
+            class='badge grey lighten-2 btn-small modal-trigger' 
+            onclick="load_modal_add_preauth_key('"""+user_name+"""')"
+        >添加预授权密钥</span>
+        <i class="material-icons circle">vpn_key</i>
+        <span class="title">预授权密钥</span>
+        """
+if len(preauth_keys["preAuthKeys"]) == 0: preauth_keys_collection += "<p>该用户没有定义密钥</p>"
+if len(preauth_keys["preAuthKeys"]) > 0:
+    preauth_keys_collection += """
+            <table class="responsive-table striped" id='"""+user_name+"""-preauthkey-table'>
+                <thead>
+                    <tr>
+                        <td>ID</td>
+                        <td class='tooltipped' data-tooltip='点击密钥前缀将其复制到剪贴板'>密钥前缀</td>
+                        <td><center>可重用</center></td>
+                        <td><center>已使用</center></td>
+                        <td><center>临时</center></td>
+                        <td><center>可用</center></td>
+                        <td><center>操作</center></td>
+                    </tr>
+                </thead>
             """
-    if len(preauth_keys["preAuthKeys"]) == 0: preauth_keys_collection += "<p>No keys defined for this user</p>"
-    if len(preauth_keys["preAuthKeys"]) > 0:
-        preauth_keys_collection += """
-                <table class="responsive-table striped" id='"""+user_name+"""-preauthkey-table'>
-                    <thead>
-                        <tr>
-                            <td>ID</td>
-                            <td class='tooltipped' data-tooltip='Click an Auth Key Prefix to copy it to the clipboard'>Key Prefix</td>
-                            <td><center>Reusable</center></td>
-                            <td><center>Used</center></td>
-                            <td><center>Ephemeral</center></td>
-                            <td><center>Usable</center></td>
-                            <td><center>Actions</center></td>
-                        </tr>
-                    </thead>
-                """
+
     for key in preauth_keys["preAuthKeys"]:
         # Get the key expiration date and compare it to now to check if it's expired:
         # Set the current timezone and local time
@@ -586,83 +587,86 @@ def build_preauth_key_table(user_name):
         # Class for the javascript function to look for to toggle the hide function
         hide_expired = "expired-row" if not key_usable else ""
 
-        btn_reusable  = "<i class='pulse material-icons tiny blue-text text-darken-1'>fiber_manual_record</i>"   if key["reusable"]  else ""
-        btn_ephemeral = "<i class='pulse material-icons tiny red-text text-darken-1'>fiber_manual_record</i>"    if key["ephemeral"] else ""
-        btn_used      = "<i class='pulse material-icons tiny yellow-text text-darken-1'>fiber_manual_record</i>" if key["used"]      else ""
-        btn_usable    = "<i class='pulse material-icons tiny green-text text-darken-1'>fiber_manual_record</i>"  if key_usable       else ""
+def hanhua_preauth_keys_collection(key, user_name, hide_expired, key_usable, expiration_time):
+    btn_reusable = "<i class='pulse material-icons tiny blue-text text-darken-1'>fiber_manual_record</i>" if key["reusable"] else ""
+    btn_ephemeral = "<i class='pulse material-icons tiny red-text text-darken-1'>fiber_manual_record</i>" if key["ephemeral"] else ""
+    btn_used = "<i class='pulse material-icons tiny yellow-text text-darken-1'>fiber_manual_record</i>" if key["used"] else ""
+    btn_usable = "<i class='pulse material-icons tiny green-text text-darken-1'>fiber_manual_record</i>" if key_usable else ""
 
-        # Other buttons:
-        btn_delete    = "<span href='#card_modal' data-tooltip='Expire this PreAuth Key' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\""+user_name+"\", \""+str(key["key"])+"\")'>Expire</span>" if key_usable else ""
-        tooltip_data  = "Expiration:  "+expiration_time
+    btn_delete = "<span href='#card_modal' data-tooltip='过期此预授权密钥' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\"" + user_name + "\", \"" + str(key["key"]) + "\")'>过期</span>" if key_usable else ""
+    tooltip_data = "过期时间：" + expiration_time
 
-        # TR ID will look like "1-albert-tr"
-        preauth_keys_collection = preauth_keys_collection+"""
-            <tr id='"""+key["id"]+"""-"""+user_name+"""-tr' class='"""+hide_expired+"""'>
-                <td>"""+str(key["id"])+"""</td>
-                <td  onclick=copy_preauth_key('"""+str(key["key"])+"""') class='tooltipped' data-tooltip='"""+tooltip_data+"""'>"""+str(key["key"])[0:10]+"""</td>
-                <td><center>"""+btn_reusable+"""</center></td>
-                <td><center>"""+btn_used+"""</center></td>
-                <td><center>"""+btn_ephemeral+"""</center></td>
-                <td><center>"""+btn_usable+"""</center></td>
-                <td><center>"""+btn_delete+"""</center></td>
-            </tr>
-        """
+    preauth_keys_collection = preauth_keys_collection + """
+        <tr id='""" + key["id"] + """-""" + user_name + """-tr' class='""" + hide_expired + """'>
+            <td>""" + str(key["id"]) + """</td>
+            <td  onclick=copy_preauth_key('""" + str(key["key"]) + """') class='tooltipped' data-tooltip='""" + tooltip_data + """'>""" + str(key["key"])[0:10] + """</td>
+            <td><center>""" + btn_reusable + """</center></td>
+            <td><center>""" + btn_used + """</center></td>
+            <td><center>""" + btn_ephemeral + """</center></td>
+            <td><center>""" + btn_usable + """</center></td>
+            <td><center>""" + btn_delete + """</center></td>
+        </tr>
+    """
 
-    preauth_keys_collection = preauth_keys_collection+"""</table>
+    preauth_keys_collection = preauth_keys_collection + """</table>
         </li>
         """
     return preauth_keys_collection
 
-def oidc_nav_dropdown(user_name, email_address, name):
-    app.logger.info("OIDC is enabled.  Building the OIDC nav dropdown")
+
+def hanhua_oidc_nav_dropdown(user_name, email_address, name):
+    app.logger.info("OIDC 已启用。构建 OIDC 导航下拉菜单")
     html_payload = """
-        <!-- OIDC Dropdown Structure -->
+        <!-- OIDC 下拉菜单结构 -->
         <ul id="dropdown1" class="dropdown-content dropdown-oidc">
             <ul class="collection dropdown-oidc-collection">
                 <li class="collection-item dropdown-oidc-avatar avatar">
                     <i class="material-icons circle">email</i>
-                    <span class="dropdown-oidc-title title">Email</span>
-                    <p>"""+email_address+"""</p>
+                    <span class="dropdown-oidc-title title">电子邮件</span>
+                    <p>""" + email_address + """</p>
                 </li>
                 <li class="collection-item dropdown-oidc-avatar avatar">
                     <i class="material-icons circle">person_outline</i>
-                    <span class="dropdown-oidc-title title">Username</span>
-                    <p>"""+user_name+"""</p>
+                    <span class="dropdown-oidc-title title">用户名</span>
+                    <p>""" + user_name + """</p>
                 </li>
             </ul>
         <li class="divider"></li>
-            <li><a href="logout"><i class="material-icons left">exit_to_app</i> Logout</a></li>
+            <li><a href="logout"><i class="material-icons left">exit_to_app</i> 退出登录</a></li>
         </ul>
         <li>
             <a class="dropdown-trigger" href="#!" data-target="dropdown1">
-                """+name+""" <i class="material-icons right">account_circle</i>
+                """ + name + """ <i class="material-icons right">account_circle</i>
             </a>
         </li>
     """
     return Markup(html_payload)
 
-def oidc_nav_mobile(user_name, email_address, name):
+
+def hanhua_oidc_nav_mobile(user_name, email_address, name):
     html_payload = """
-         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>Logout</a></li>
+         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>退出登录</a></li>
     """
     return Markup(html_payload)
 
-def render_search():
+
+def hanhua_render_search():
     html_payload = """
-    <li role="menu-item" class="tooltipped" data-position="bottom" data-tooltip="Search" onclick="show_search()">
+    <li role="menu-item" class="tooltipped" data-position="bottom" data-tooltip="搜索" onclick="show_search()">
         <a href="#"><i class="material-icons">search</i></a>
     </li>
     """
     return Markup(html_payload)
 
-def render_routes():
-    app.logger.info("Rendering Routes page")
-    url           = headscale.get_url()
-    api_key       = headscale.get_api_key()
-    all_routes    = headscale.get_routes(url, api_key)
 
-    # If there are no routes, just exit:
-    if len(all_routes) == 0: return Markup("<br><br><br><center>There are no routes to display!</center>")
+def hanhua_render_routes():
+    app.logger.info("渲染路由页面")
+    url = headscale.get_url()
+    api_key = headscale.get_api_key()
+    all_routes = headscale.get_routes(url, api_key)
+
+    if len(all_routes) == 0:return Markup("<br><br><br><center>没有要显示的路由！</center>")
+
     # Get a list of all Route ID's to iterate through:
     all_routes_id_list = []
     for route in all_routes["routes"]:
@@ -677,38 +681,39 @@ def render_routes():
     failover_content = ""
     exit_content     = ""
 
-    route_title='<span class="card-title">Routes</span>'
-    failover_title='<span class="card-title">Failover Routes</span>'
-    exit_title='<span class="card-title">Exit Routes</span>'
+route_title='<span class="card-title">路由</span>'
+failover_title='<span class="card-title">备份路由</span>'
+exit_title='<span class="card-title">退出路由</span>'
 
-    markup_pre = """
-    <div class="row">
-        <div class="col m1"></div>
-        <div class="col s12 m10">
-            <div class="card">
-                <div class="card-content">
-    """
-    markup_post = """ 
-                </div>
+markup_pre = """
+<div class="row">
+    <div class="col m1"></div>
+    <div class="col s12 m10">
+        <div class="card">
+            <div class="card-content">
+"""
+markup_post = """ 
             </div>
         </div>
-        <div class="col m1"></div>
     </div>
-    """
+    <div class="col m1"></div>
+</div>
+"""
 
     ##############################################################################################
     # Step 1:  Get all non-exit and non-failover routes:
     route_content = markup_pre+route_title
     route_content += """<p><table>
-    <thead>
-        <tr>
-            <th>ID       </th>
-            <th>Machine  </th>
-            <th>Route    </th>
-            <th width="60px">Enabled</th>
-        </tr>
-    </thead>
-    <tbody>
+<thead>
+    <tr>
+        <th>编号</th>
+        <th>机器</th>
+        <th>路径</th>
+        <th width="60px">已启用</th>
+    </tr>
+</thead>
+<tbody>
+
     """
     for route in all_routes["routes"]:
         # Get relevant info:
@@ -797,14 +802,15 @@ def render_routes():
             failover_content += """<p>
             <h5>"""+failover_display+"""</h5><h5>"""+str(route_prefix)+"""</h5>
             <table>
-                <thead>
-                    <tr>
-                        <th>Machine</th>
-                        <th width="60px">Enabled</th>
-                        <th width="60px">Primary</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <thead>
+        <tr>
+            <th>机器</th>
+            <th width="60px">已启用</th>
+            <th width="60px">主要</th>
+        </tr>
+    </thead>
+    <tbody>
+
             """
 
             # Build the display:
@@ -857,13 +863,13 @@ def render_routes():
     # Display by machine, not by route
     exit_content = markup_pre+exit_title
     exit_content += """<p><table>
-    <thead>
-        <tr>
-            <th>Machine</th>
-            <th>Enabled</th>
-        </tr>
-    </thead>
-    <tbody>
+<thead>
+    <tr>
+        <th>机器</th>
+        <th>已启用</th>
+    </tr>
+</thead>
+<tbody>
     """
     # Get exit route ID's for each node in the list: 
     for node in exit_node_list:
