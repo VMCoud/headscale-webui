@@ -78,19 +78,20 @@
             <ul class="right hide-on-med-and-down">
                 {% block INPAGE_SEARCH %}{% endblock %}
                 <li role="menu-item" class="tooltipped {{ overview_active   }}" data-position="bottom" data-tooltip="概览">
-                   <a href="overview"><i class="material-icons">map</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ routes_active   }}" data-position="bottom" data-tooltip="路由">
-                   <a href="routes"><i class="material-icons">alt_route</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ machines_active    }}" data-position="bottom" data-tooltip="设备">
-                   <a href="machines"><i class="material-icons">devices</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ users_active }}" data-position="bottom" data-tooltip="用户">
-                   <a href="users"><i class="material-icons">people</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ settings_active   }}" data-position="bottom" data-tooltip="设置">
-                   <a href="settings"><i class="material-icons">settings</i></a>
+                  <a href="overview"><i class="material-icons">概览</i></a>
+               </li>
+               <li role="menu-item" class="tooltipped {{ routes_active   }}" data-position="bottom" data-tooltip="路由">
+                  <a href="routes"><i class="material-icons">路由</i></a>
+               </li>
+               <li role="menu-item" class="tooltipped {{ machines_active    }}" data-position="bottom" data-tooltip="设备">
+                  <a href="machines"><i class="material-icons">设备</i></a>
+               </li>
+               <li role="menu-item" class="tooltipped {{ users_active }}" data-position="bottom" data-tooltip="用户">
+                  <a href="users"><i class="material-icons">用户</i></a>
+               </li>
+               <li role="menu-item" class="tooltipped {{ settings_active   }}" data-position="bottom" data-tooltip="设置">
+                  <a href="settings"><i class="material-icons">设置</i></a>
+   
                 </li>
                 {% block OIDC_NAV_DROPDOWN %}{% endblock %}
              </ul>
