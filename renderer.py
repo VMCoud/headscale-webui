@@ -8,7 +8,7 @@ from concurrent.futures import ALL_COMPLETED, wait
 from flask_executor     import Executor
 
 LOG_LEVEL = os.environ["LOG_LEVEL"].replace('"', '').upper()
-# 初始化 Flask 应用程序和日志记录：
+# Initiate the Flask application and logging:
 app = Flask(__name__, static_url_path="/static")
 match LOG_LEVEL:
     case "DEBUG"   : app.logger.setLevel(logging.DEBUG)
@@ -19,36 +19,36 @@ match LOG_LEVEL:
 executor = Executor(app)
 
 def render_overview():
-    app.logger.info("正在渲染概览页面")
+    app.logger.info("Rendering the Overview page")
     url           = headscale.get_url()
     api_key       = headscale.get_api_key()
 
     timezone         = pytz.timezone(os.environ["TZ"] if os.environ["TZ"] else "UTC")
     local_time       = timezone.localize(datetime.now())
     
-    # 概览页面只需从配置文件中读取静态信息并显示
-    # 打开 config.yaml 并解析它
+    # Overview page will just read static information from the config file and display it
+    # Open the config.yaml and parse it.
     config_file = ""
     try:    
         config_file = open("/etc/headscale/config.yml",  "r")
-        app.logger.info("打开 /etc/headscale/config.yml")
+        app.logger.info("Opening /etc/headscale/config.yml")
     except: 
         config_file = open("/etc/headscale/config.yaml", "r")
-        app.logger.info("打开 /etc/headscale/config.yaml")
+        app.logger.info("Opening /etc/headscale/config.yaml")
     config_yaml = yaml.safe_load(config_file)
 
-    # 获取并显示以下信息：
-    # 服务器的机器、用户、预授权密钥、API 密钥到期时间、服务器版本
+    # Get and display the following information:
+    # Overview of the server's machines, users, preauth keys, API key expiration, server version
     
-    # 获取所有机器：
+    # Get all machines:
     machines = headscale.get_machines(url, api_key)
     machines_count = len(machines["machines"])
 
-    # 需要检查路由是否附加到活动机器上：
-    # 问题:  https://github.com/iFargle/headscale-webui/issues/36 
-    # 问题:  https://github.com/juanfont/headscale/issues/1228 
+    # Need to check if routes are attached to an active machine:
+    # ISSUE:  https://github.com/iFargle/headscale-webui/issues/36 
+    # ISSUE:  https://github.com/juanfont/headscale/issues/1228 
 
-    # 获取所有路由：
+    # Get all routes:
     routes = headscale.get_routes(url,api_key)
 
     total_routes = 0
@@ -61,7 +61,7 @@ def render_overview():
         if route["enabled"] and route['advertised'] and int(route['machine']['id']) != 0: 
             enabled_routes += 1
 
-    # 获取所有启用的出口路由的计数
+    # Get a count of all enabled exit routes
     exits_count = 0
     exits_enabled_count = 0
     for route in routes["routes"]:
@@ -71,7 +71,7 @@ def render_overview():
                 if route["enabled"]:
                     exits_enabled_count += 1
 
-    # 获取用户和预授权密钥计数
+    # Get User and PreAuth Key counts
     user_count        = 0
     usable_keys_count = 0
     users = headscale.get_users(url, api_key)
@@ -84,7 +84,7 @@ def render_overview():
             if key["reusable"] and not key_expired: usable_keys_count += 1
             if not key["reusable"] and not key["used"] and not key_expired: usable_keys_count += 1
 
-    # 一般内容变量：
+    # General Content variables:
     ip_prefixes, server_url, disable_check_updates, ephemeral_node_inactivity_timeout, node_update_check_interval = "N/A", "N/A", "N/A", "N/A", "N/A"
     if "ip_prefixes"                       in config_yaml:  ip_prefixes                       = str(config_yaml["ip_prefixes"])
     if "server_url"                        in config_yaml:  server_url                        = str(config_yaml["server_url"])
@@ -92,7 +92,7 @@ def render_overview():
     if "ephemeral_node_inactivity_timeout" in config_yaml:  ephemeral_node_inactivity_timeout = str(config_yaml["ephemeral_node_inactivity_timeout"])
     if "node_update_check_interval"        in config_yaml:  node_update_check_interval        = str(config_yaml["node_update_check_interval"])
 
-    # OIDC 内容变量：
+    # OIDC Content variables:
     issuer, client_id, scope, use_expiry_from_token, expiry = "N/A", "N/A", "N/A", "N/A", "N/A"
     if "oidc" in config_yaml:
         if "issuer"                in config_yaml["oidc"] : issuer                = str(config_yaml["oidc"]["issuer"])                
@@ -101,7 +101,7 @@ def render_overview():
         if "use_expiry_from_token" in config_yaml["oidc"] : use_expiry_from_token = str(config_yaml["oidc"]["use_expiry_from_token"]) 
         if "expiry"                in config_yaml["oidc"] : expiry                = str(config_yaml["oidc"]["expiry"])   
 
-    # 嵌入的 DERP 服务器信息。
+    # Embedded DERP server information.
     enabled, region_id, region_code, region_name, stun_listen_addr = "N/A", "N/A", "N/A", "N/A", "N/A"
     if "derp" in config_yaml:
         if "server" in config_yaml["derp"] and config_yaml["derp"]["server"]["enabled"]:
@@ -118,91 +118,96 @@ def render_overview():
         if "domains"     in config_yaml["dns_config"]: domains     = str(config_yaml["dns_config"]["domains"])     
         if "base_domain" in config_yaml["dns_config"]: base_domain = str(config_yaml["dns_config"]["base_domain"]) 
 
-    # 开始组合内容
-    overview_content = """
-    <div class="row">
-        <div class="col s1"></div>
-        <div class="col s10">
-            <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>服务器统计信息</h4></li>
-                <li class="collection-item"><div>已添加的机器数       <div class="secondary-content overview-page">"""+ str(machines_count)                               +"""</div></div></li>
-                <li class="collection-item"><div>已添加的用户数          <div class="secondary-content overview-page">"""+ str(user_count)                                   +"""</div></div></li>
-                <li class="collection-item"><div>可用的预授权密钥数  <div class="secondary-content overview-page">"""+ str(usable_keys_count)                            +"""</div></div></li>
-                <li class="collection-item"><div>已启用/总路由数 <div class="secondary-content overview-page">"""+ str(enabled_routes) +"""/"""+str(total_routes)    +"""</div></div></li>
-                <li class="collection-item"><div>已启用/总出口路由数  <div class="secondary-content overview-page">"""+ str(exits_enabled_count) +"""/"""+str(exits_count)+"""</div></div></li>
-            </ul>
-        </div>
-        <div class="col s1"></div>
+    # Start putting the content together
+overview_content = """
+<div class="row">
+    <div class="col s1"></div>
+    <div class="col s10">
+        <ul class="collection with-header z-depth-1">
+            <li class="collection-header"><h4>服务器统计</h4></li>
+            <li class="collection-item"><div>已添加的机器数       <div class="secondary-content overview-page">"""+ str(machines_count) +"""</div></div></li>
+            <li class="collection-item"><div>已添加的用户数       <div class="secondary-content overview-page">"""+ str(user_count) +"""</div></div></li>
+            <li class="collection-item"><div>可用的预验证密钥数   <div class="secondary-content overview-page">"""+ str(usable_keys_count) +"""</div></div></li>
+            <li class="collection-item"><div>启用/总计路由数      <div class="secondary-content overview-page">"""+ str(enabled_routes) +"""/"""+str(total_routes) +"""</div></div></li>
+            <li class="collection-item"><div>启用/总计出口数      <div class="secondary-content overview-page">"""+ str(exits_enabled_count) +"""/"""+str(exits_count)+"""</div></div></li>
+        </ul>
     </div>
-    """
-    general_content = """
-    <div class="row">
-        <div class="col s1"></div>
-        <div class="col s10">
-            <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>常规信息</h4></li>
-                <li class="collection-item"><div>IP 前缀                       <div class="secondary-content overview-page">"""+ ip_prefixes                       +"""</div></div></li>
-                <li class="collection-item"><div>服务器 URL                        <div class="secondary-content overview-page">"""+ server_url                        +"""</div></div></li>
-                <li class="collection-item"><div>禁用更新检查                  <div class="secondary-content overview-page">"""+ disable_check_updates             +"""</div></div></li>
-                <li class="collection-item"><div>短暂节点不活动超时时间 <div class="secondary-content overview-page">"""+ ephemeral_node_inactivity_timeout +"""</div></div></li>
-                <li class="collection-item"><div>节点更新检查间隔        <div class="secondary-content overview-page">"""+ node_update_check_interval        +"""</div></div></li>
-            </ul>
-        </div>
-        <div class="col s1"></div>
-    </div>
-    """
-    oidc_content = """
-    <div class="row">
-        <div class="col s1"></div>
-        <div class="col s10">
-            <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>Headscale OIDC</h4></li>
-                <li class="collection-item"><div>颁发者                <div class="secondary-content overview-page">"""+ issuer                +"""</div></div></li>
-                <li class="collection-item"><div>客户端 ID             <div class="secondary-content overview-page">"""+ client_id             +"""</div></div></li>
-                <li class="collection-item"><div>范围                 <div class="secondary-content overview-page">"""+ scope                 +"""</div></div></li>
-                <li class="collection-item"><div>使用 OIDC 令牌过期时间 <div class="secondary-content overview-page">"""+ use_expiry_from_token +"""</div></div></li>
-                <li class="collection-item"><div>过期时间                <div class="secondary-content overview-page">"""+ expiry                +"""</div></div></li>
-            </ul>
-        </div>
-        <div class="col s1"></div>
-    </div>
-    """
-    derp_content = """
-    <div class="row">
-        <div class="col s1"></div>
-        <div class="col s10">
-            <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>嵌入的 DERP</h4></li>
-                <li class="collection-item"><div>已启用     <div class="secondary-content overview-page">"""+ enabled          +"""</div></div></li>
-                <li class="collection-item"><div>区域 ID   <div class="secondary-content overview-page">"""+ region_id        +"""</div></div></li>
-                <li class="collection-item"><div>区域代码 <div class="secondary-content overview-page">"""+ region_code      +"""</div></div></li>
-                <li class="collection-item"><div>区域名称 <div class="secondary-content overview-page">"""+ region_name      +"""</div></div></li>
-                <li class="collection-item"><div>STUN 地址<div class="secondary-content overview-page">"""+ stun_listen_addr +"""</div></div></li>
-            </ul>
-        </div>
-        <div class="col s1"></div>
-    </div>
-    """
-    dns_content = """
-    <div class="row">
-        <div class="col s1"></div>
-        <div class="col s10">
-            <ul class="collection with-header z-depth-1">
-                <li class="collection-header"><h4>DNS</h4></li>
-                <li class="collection-item"><div>DNS Nameservers <div class="secondary-content overview-page">"""+  nameservers  +"""</div></div></li>
-                <li class="collection-item"><div>MagicDNS        <div class="secondary-content overview-page">"""+  magic_dns    +"""</div></div></li>
-                <li class="collection-item"><div>Search Domains  <div class="secondary-content overview-page">"""+  domains      +"""</div></div></li>
-                <li class="collection-item"><div>Base Domain     <div class="secondary-content overview-page">"""+  base_domain  +"""</div></div></li>
-            </ul>
-        </div>
-        <div class="col s1"></div>
-    </div>
-    """
+    <div class="col s1"></div>
+</div>
+"""
 
-    # 移除不需要的内容：
-    # 如果 OIDC 不可用，则移除 OIDC：
+general_content = """
+<div class="row">
+    <div class="col s1"></div>
+    <div class="col s10">
+        <ul class="collection with-header z-depth-1">
+            <li class="collection-header"><h4>常规设置</h4></li>
+            <li class="collection-item"><div>IP前缀                          <div class="secondary-content overview-page">"""+ ip_prefixes +"""</div></div></li>
+            <li class="collection-item"><div>服务器URL                       <div class="secondary-content overview-page">"""+ server_url +"""</div></div></li>
+            <li class="collection-item"><div>禁用更新检查                    <div class="secondary-content overview-page">"""+ disable_check_updates +"""</div></div></li>
+            <li class="collection-item"><div>临时节点不活动超时时间           <div class="secondary-content overview-page">"""+ ephemeral_node_inactivity_timeout +"""</div></div></li>
+            <li class="collection-item"><div>节点更新检查间隔                <div class="secondary-content overview-page">"""+ node_update_check_interval +"""</div></div></li>
+        </ul>
+    </div>
+    <div class="col s1"></div>
+</div>
+"""
+
+oidc_content = """
+<div class="row">
+    <div class="col s1"></div>
+    <div class="col s10">
+        <ul class="collection with-header z-depth-1">
+            <li class="collection-header"><h4>Headscale OIDC</h4></li>
+            <li class="collection-item"><div>发行者                          <div class="secondary-content overview-page">"""+ issuer +"""</div></div></li>
+            <li class="collection-item"><div>客户端ID                        <div class="secondary-content overview-page">"""+ client_id +"""</div></div></li>
+            <li class="collection-item"><div>范围                            <div class="secondary-content overview-page">"""+ scope +"""</div></div></li>
+            <li class="collection-item"><div>使用OIDC令牌过期时间            <div class="secondary-content overview-page">"""+ use_expiry_from_token +"""</div></div></li>
+            <li class="collection-item"><div>过期时间                        <div class="secondary-content overview-page">"""+ expiry +"""</div></div></li>
+        </ul>
+    </div>
+    <div class="col s1"></div>
+</div>
+"""
+
+derp_content = """
+<div class="row">
+    <div class="col s1"></div>
+    <div class="col s10">
+        <ul class="collection with-header z-depth-1">
+            <li class="collection-header"><h4>内嵌DERP</h4></li>
+            <li class="collection-item"><div>启用                            <div class="secondary-content overview-page">"""+ enabled +"""</div></div></li>
+            <li class="collection-item"><div>区域ID                          <div class="secondary-content overview-page">"""+ region_id +"""</div></div></li>
+            <li class="collection-item"><div>区域代码                        <div class="secondary-content overview-page">"""+ region_code +"""</div></div></li>
+            <li class="collection-item"><div>区域名称                        <div class="secondary-content overview-page">"""+ region_name +"""</div></div></li>
+            <li class="collection-item"><div>STUN地址                        <div class="secondary-content overview-page">"""+ stun_listen_addr +"""</div></div></li>
+        </ul>
+    </div>
+    <div class="col s1"></div>
+</div>
+"""
+
+dns_content = """
+<div class="row">
+    <div class="col s1"></div>
+    <div class="col s10">
+        <ul class="collection with-header z-depth-1">
+            <li class="collection-header"><h4>DNS</h4></li>
+            <li class="collection-item"><div>DNS名称服务器                   <div class="secondary-content overview-page">"""+ nameservers +"""</div></div></li>
+            <li class="collection-item"><div>MagicDNS                        <div class="secondary-content overview-page">"""+ magic_dns +"""</div></div></li>
+            <li class="collection-item"><div>搜索域                          <div class="secondary-content overview-page">"""+ domains +"""</div></div></li>
+            <li class="collection-item"><div>基础域                          <div class="secondary-content overview-page">"""+ base_domain +"""</div></div></li>
+        </ul>
+    </div>
+    <div class="col s1"></div>
+</div>
+"""
+
+
+    # Remove content that isn't needed:
+    # Remove OIDC if it isn't available:
     if "oidc" not in config_yaml: oidc_content = ""
-    # 如果 DERP 不可用或未启用，则移除 DERP：
+    # Remove DERP if it isn't available or isn't enabled
     if "derp" not in config_yaml:  derp_content = ""
     if "derp" in config_yaml:
         if "server" in config_yaml["derp"]:
@@ -210,58 +215,58 @@ def render_overview():
                 derp_content = ""
 
     # TODO:  
-    #     是否存在自定义 DERP 服务器
-    #         如果存在自定义 DERP 服务器，则从配置文件中获取文件位置。假设映射相同。
-    #     是否启用了内置 DERP 服务器 
-    #     IP 前缀
-    #     DNS 配置
+    #     Whether there are custom DERP servers
+    #         If there are custom DERP servers, get the file location from the config file.  Assume mapping is the same.
+    #     Whether the built-in DERP server is enabled 
+    #     The IP prefixes
+    #     The DNS config
 
     if config_yaml["derp"]["paths"]: pass
-    #   # 打开路径：
+    #   # open the path:
     #   derp_file = 
     #   config_file = open("/etc/headscale/config.yaml", "r")
     #   config_yaml = yaml.safe_load(config_file)
-    #     ACME 配置（如果不为空）
-    #     是否正在运行更新
-    #     是否启用了指标（以及其监听地址）
-    #     日志级别
-    #     驱动 headscale 的数据库类型
+    #     The ACME config, if not empty
+    #     Whether updates are running
+    #     Whether metrics are enabled (and their listen addr)
+    #     The log level
+    #     What kind of Database is being used to drive headscale
 
     content = "<br>" + overview_content + general_content + derp_content + oidc_content + dns_content + ""
     return Markup(content)
 
 def thread_machine_content(machine, machine_content, idx, all_routes, failover_pair_prefixes):
-    # machine      = 传入的机器信息
-    # machine_content = 写入内容的位置
+    # machine      = passed in machine information
+    # content      = place to write the content
 
-    # app.logger.debug("机器信息")
+    # app.logger.debug("Machine Information")
     # app.logger.debug(str(machine))
-    app.logger.debug("机器信息 =================")
-    app.logger.debug("名称:  %s, ID:  %s, 用户:  %s, 名称: %s, ", str(machine["name"]), str(machine["id"]), str(machine["user"]["name"]), str(machine["givenName"]))
+    app.logger.debug("Machine Information =================")
+    app.logger.debug("Name:  %s, ID:  %s, User:  %s, givenName: %s, ", str(machine["name"]), str(machine["id"]), str(machine["user"]["name"]), str(machine["givenName"]))
 
     url           = headscale.get_url()
     api_key       = headscale.get_api_key()
 
-    # 设置当前时区和本地时间
+    # Set the current timezone and local time
     timezone   = pytz.timezone(os.environ["TZ"] if os.environ["TZ"] else "UTC")
     local_time = timezone.localize(datetime.now())
 
-    # 获取机器的路由
+    # Get the machines routes
     pulled_routes = headscale.get_machine_routes(url, api_key, machine["id"])
     routes = ""
 
-    # 测试机器是否为出口节点：
+    # Test if the machine is an exit node:
     exit_route_found = False
     exit_route_enabled = False
-    # 如果设备启用了故障转移路由（高可用路由）
+    # If the device has enabled Failover routes (High Availability routes)
     ha_enabled = False
 
-    # 如果 "routes" 的长度为 NULL/0，则没有路由，启用或禁用：
+    # If the length of "routes" is NULL/0, there are no routes, enabled or disabled:
     if len(pulled_routes["routes"]) > 0:
         advertised_routes = False
 
-        # 首先，检查是否有任何已启用和已发布的路由
-        # 如果是这样，我们将输出路由的集合项。否则，它将不会显示。
+        # First, check if there are any routes that are both enabled and advertised
+        # If that is true, we will output the collection-item for routes.  Otherwise, it will not be displayed.
         for route in pulled_routes["routes"]:
             if route["advertised"]: 
                 advertised_routes = True
@@ -275,114 +280,116 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
             # app.logger.debug("Pulled Routes Dump:  "+str(pulled_routes))
             # app.logger.debug("All    Routes Dump:  "+str(all_routes))
 
-            # 找到所有出口并将其 ID 放入 exit_routes 数组中
+            # Find all exits and put their ID's into the exit_routes array
             exit_routes  = []
             exit_enabled_color = "red"
-            exit_tooltip = "启用"
+            exit_tooltip = "enable"
             exit_route_enabled = False
             
             for route in pulled_routes["routes"]:
                 if route["prefix"] == "0.0.0.0/0" or route["prefix"] == "::/0":
                     exit_routes.append(route["id"])
                     exit_route_found = True
-                    # 检查是否已启用：
+                    # Test if it is enabled:
                     if route["enabled"]:
                         exit_enabled_color = "green"
-                        exit_tooltip       = '禁用'
+                        exit_tooltip       = 'disable'
                         exit_route_enabled = True
-                    app.logger.debug("找到出口路由 ID:  "+str(exit_routes))
-                    app.logger.debug("出口路由信息:  ID:  %s | 启用:  %s | exit_route_enabled:  %s / Found:  %s", str(route["id"]), str(route["enabled"]), str(exit_route_enabled), str(exit_route_found))
+                    app.logger.debug("Found exit route ID's:  "+str(exit_routes))
+                    app.logger.debug("Exit Route Information:  ID:  %s | Enabled:  %s | exit_route_enabled:  %s / Found:  %s", str(route["id"]), str(route["enabled"]), str(exit_route_enabled), str(exit_route_found))
 
-            # 显示出口路由的按钮：
+            # Print the button for the Exit routes:
             if exit_route_found:
-                routes = routes+""" <p 
-                    class='waves-effect waves-light btn-small """+exit_enabled_color+""" lighten-2 tooltipped'
+                routes = routes + """ <p 
+                    class='waves-effect waves-light btn-small """ + exit_enabled_color + """ lighten-2 tooltipped'
                     data-position='top' data-tooltip='点击以""" + exit_tooltip + """'
-                    id='"""+machine["id"]+"""-exit'
-                    onclick="toggle_exit("""+exit_routes[0]+""", """+exit_routes[1]+""", '"""+machine["id"]+"""-exit', '"""+str(exit_route_enabled)+"""', 'machines')">
-                    出口路由
+                    id='""" + machine["id"] + """-exit'
+                    onclick="toggle_exit(""" + exit_routes[0] + """, """ + exit_routes[1] + """, '""" + machine["id"] + """-exit', '""" + str(exit_route_enabled) + """', 'machines')">
+                    退出路由
                 </p>
                 """
 
-            # 检查路由是否具有另一个已启用的相同路由。  
-            # 将当前机器的所有路由与所有机器的所有路由进行比较...
+
+            # Check if the route has another enabled identical route.  
+            # Check all routes from the current machine...
             for route in pulled_routes["routes"]:
-                # ... 对比所有路由 ...
+                # ... against all routes from all machines ....
                 for route_info in all_routes["routes"]:
-                    app.logger.debug("比较路由 %s 和 %s", str(route["prefix"]), str(route_info["prefix"]))
-                    # ... 如果路由前缀匹配且不是出口节点 ...
+                    app.logger.debug("Comparing routes %s and %s", str(route["prefix"]), str(route_info["prefix"]))
+                    # ... If the route prefixes match and are not exit nodes ... 
                     if str(route_info["prefix"]) == str(route["prefix"]) and (route["prefix"] != "0.0.0.0/0" and route["prefix"] != "::/0"):
-                        # 检查路由 ID 是否匹配。如果不匹配 ...
-                        app.logger.debug("找到匹配项:  %s 和 %s", str(route["prefix"]), str(route_info["prefix"]))
+                        # Check if the route ID's match.  If they don't ... 
+                        app.logger.debug("Found a match:  %s and %s", str(route["prefix"]), str(route_info["prefix"]))
                         if route_info["id"] != route["id"]:
-                            app.logger.debug("路由 ID 不匹配。它们位于不同的节点上。")
-                            # ... 检查路由前缀是否已在数组中 ...
+                            app.logger.debug("Route ID's don't match.  They're on different nodes.")
+                            # ... Check if the routes prefix is already in the array...
                             if route["prefix"] not in failover_pair_prefixes:
-                                # 如果不在数组中，则将其添加到数组中。
-                                app.logger.info("找到新的故障转移对:  %s", str(route["prefix"]))
+                                #  IF it isn't, add it.
+                                app.logger.info("New HA pair found:  %s", str(route["prefix"]))
                                 failover_pair_prefixes.append(str(route["prefix"]))
                             if route["enabled"] and route_info["enabled"]:
-                                # 如果已经在数组中 ...
-                                # 仅当两个路由都已启用时显示为故障转移：
-                                app.logger.debug("两个路由都已启用。将其设置为故障转移 [%s] (%s) ", str(machine["name"]), str(route["prefix"]))
+                                # If it is already in the array. . .
+                                # Show as HA only if both routes are enabled:
+                                app.logger.debug("Both routes are enabled.  Setting as HA [%s] (%s) ", str(machine["name"]), str(route["prefix"]))
                                 ha_enabled = True
-                # 如果路由是出口节点并且已计入故障转移路由，则显示它。
+                # If the route is an exit node and already counted as a failover route, it IS a failover route, so display it.
                 if route["prefix"] != "0.0.0.0/0" and route["prefix"] != "::/0" and route["prefix"] in failover_pair_prefixes:
                     route_enabled = "red"
-                    route_tooltip = '启用'
+                    route_tooltip = 'enable'
                     color_index   = failover_pair_prefixes.index(str(route["prefix"]))
                     route_enabled_color = helper.get_color(color_index, "failover")
                     if route["enabled"]:
                         color_index   = failover_pair_prefixes.index(str(route["prefix"]))
                         route_enabled = helper.get_color(color_index, "failover")
-                        route_tooltip = '禁用'
-                    routes = routes+""" <p 
-                        class='waves-effect waves-light btn-small """+route_enabled+""" lighten-2 tooltipped'
-                        data-position='top' data-tooltip='点击以""" + route_tooltip + """ (故障转移对)'
-                        id='"""+route['id']+"""'
-                        onclick="toggle_failover_route("""+route['id']+""", '"""+str(route['enabled'])+"""', '"""+str(route_enabled_color)+"""')">
-                        """+route['prefix']+"""
+                        route_tooltip = 'disable'
+                    routes = routes + """ <p 
+                        class='waves-effect waves-light btn-small """ + route_enabled + """ lighten-2 tooltipped'
+                        data-position='top' data-tooltip='点击以""" + route_tooltip + """（故障转移对）'
+                        id='""" + route['id'] + """'
+                        onclick="toggle_failover_route(""" + route['id'] + """, '""" + str(route['enabled']) + """', '""" + str(route_enabled_color) + """')">
+                        """ + route['prefix'] + """
                     </p>
                     """
                     
-            # 获取剩余的路由：
+            # Get the remaining routes:
             for route in pulled_routes["routes"]:
-                # 获取剩余的路由 - 没有出口或故障转移对
+                # Get the remaining routes - No exits or failover pairs
                 if route["prefix"] != "0.0.0.0/0" and route["prefix"] != "::/0" and route["prefix"] not in failover_pair_prefixes:
-                    app.logger.debug("路由：["+str(route['machine']['name'])+"] id："+str(route['id'])+" / 前缀："+str(route['prefix'])+" 是否启用："+str(route['enabled']))
+                    app.logger.debug("Route:  ["+str(route['machine']['name'])+"] id: "+str(route['id'])+" / prefix: "+str(route['prefix'])+" enabled?:  "+str(route['enabled']))
                     route_enabled = "red"
-                    route_tooltip = '启用'
+                    route_tooltip = 'enable'
                     if route["enabled"]:
                         route_enabled = "green"
-                        route_tooltip = '禁用'
-                    routes = routes+""" <p 
-                        class='waves-effect waves-light btn-small """+route_enabled+""" lighten-2 tooltipped'
-                        data-position='top' data-tooltip='点击以"""+route_tooltip+"""'
-                        id='"""+route['id']+"""'
-                        onclick="toggle_route("""+route['id']+""", '"""+str(route['enabled'])+"""', 'machines')">
-                        """+route['prefix']+"""
+                        route_tooltip = 'disable'
+                    routes = routes + """ <p 
+                        class='waves-effect waves-light btn-small """ + route_enabled + """ lighten-2 tooltipped'
+                        data-position='top' data-tooltip='点击以""" + route_tooltip + """'
+                        id='""" + route['id'] + """'
+                        onclick="toggle_route(""" + route['id'] + """, '""" + str(route['enabled']) + """', 'machines')">
+                        """ + route['prefix'] + """
                     </p>
                     """
-            routes = routes+"</p></li>"
+                    routes = routes + "</p></li>"
 
-    # 获取机器标签
+
+    # Get machine tags
     tag_array = ""
     for tag in machine["forcedTags"]: 
         tag_array = tag_array+"{tag: '"+tag[4:]+"'}, "
-    tags = """
+tags = """
         <li class="collection-item avatar">
-            <i class="material-icons circle tooltipped" data-position="right" data-tooltip="刷新页面后，空格将被替换为破折号(-)">label</i>
+            <i class="material-icons circle tooltipped" data-position="right" data-tooltip="刷新页面后，空格将被替换为破折号（-）">label</i>
             <span class="title">标签</span>
-            <p><div style='margin: 0px' class='chips' id='"""+machine["id"]+"""-tags'></div></p>
+            <p><div style='margin: 0px' class='chips' id='""" + machine["id"] + """-tags'></div></p>
         </li>
         <script>
             window.addEventListener('load', 
                 function() { 
                     var instances = M.Chips.init ( 
-                        document.getElementById('"""+machine['id']+"""-tags'),  ({
-                            data:["""+tag_array+"""], 
-                            onChipDelete() { delete_chip("""+machine["id"]+""", this.chipsData) }, 
-                            onChipAdd()    { add_chip("""+machine["id"]+""",    this.chipsData) }
+                        document.getElementById('""" + machine['id'] + """-tags'),  ({
+                            data:[""" + tag_array + """], 
+                            onChipDelete() { delete_chip(""" + machine["id"] + """, this.chipsData) }, 
+                            onChipAdd()    { add_chip(""" + machine["id"] + """,    this.chipsData) }
                         }) 
                     );
                 }, false
@@ -390,13 +397,14 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
         </script>
         """
 
-    # 获取机器IP地址
+
+    # Get the machine IP's
     machine_ips = "<ul>"
     for ip_address in machine["ipAddresses"]:
         machine_ips = machine_ips+"<li>"+ip_address+"</li>"
     machine_ips = machine_ips+"</ul>"
 
-    # 格式化日期以便易读
+    # Format the dates for easy readability
     last_seen_parse   = parser.parse(machine["lastSeen"])
     last_seen_local   = last_seen_parse.astimezone(timezone)
     last_seen_delta   = local_time - last_seen_local
@@ -415,42 +423,42 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
     created_print     = helper.pretty_print_duration(created_delta)
     created_time      = str(created_local.strftime('%A %m/%d/%Y, %H:%M:%S'))+" "+str(timezone)+" ("+str(created_print)+")"
 
-    # 如果没有过期日期，不需要进行任何计算：
+    # If there is no expiration date, we don't need to do any calculations:
     if machine["expiry"] != "0001-01-01T00:00:00Z":
         expiry_parse     = parser.parse(machine["expiry"])
         expiry_local     = expiry_parse.astimezone(timezone)
         expiry_delta     = expiry_local - local_time
         expiry_print     = helper.pretty_print_duration(expiry_delta, "expiry")
         if str(expiry_local.strftime('%Y')) in ("0001",  "9999", "0000"):
-            expiry_time  = "没有过期日期。"
+            expiry_time  = "No expiration date."
         elif int(expiry_local.strftime('%Y')) > int(expiry_local.strftime('%Y'))+2:
             expiry_time  = str(expiry_local.strftime('%m/%Y'))+" "+str(timezone)+" ("+str(expiry_print)+")"
         else: 
             expiry_time  = str(expiry_local.strftime('%A %m/%d/%Y, %H:%M:%S'))+" "+str(timezone)+" ("+str(expiry_print)+")"
 
         expiring_soon = True if int(expiry_delta.days) < 14 and int(expiry_delta.days) > 0 else False
-        app.logger.debug("机器："+machine["name"]+" 过期时间："+str(expiry_local.strftime('%Y'))+" / "+str(expiry_delta.days))
+        app.logger.debug("Machine:  "+machine["name"]+" expires:  "+str(expiry_local.strftime('%Y'))+" / "+str(expiry_delta.days))
     else:
-        expiry_time  = "没有过期日期。"
+        expiry_time  = "No expiration date."
         expiring_soon = False
-        app.logger.debug("机器："+machine["name"]+" 没有过期日期")
+        app.logger.debug("Machine:  "+machine["name"]+" has no expiration date")
 
 
-    # 获取PreAuth密钥的前10个字符：
+    # Get the first 10 characters of the PreAuth Key:
     if machine["preAuthKey"]:
         preauth_key = str(machine["preAuthKey"]["key"])[0:10]
-    else: preauth_key = "无"
+    else: preauth_key = "None"
 
-    # 设置状态和用户徽章颜色：
+    # Set the status and user badge color:
     text_color = helper.text_color_duration(last_seen_delta)
     user_color = helper.get_color(int(machine["user"]["id"]))
 
-    # 生成各种徽章：
-    status_badge      = "<i class='material-icons left tooltipped " + text_color + "' data-position='top' data-tooltip='最后在线时间："+last_seen_print+"' id='"+machine["id"]+"-status'>fiber_manual_record</i>"
-    user_badge        = "<span class='badge ipinfo " + user_color + " white-text hide-on-small-only' id='"+machine["id"]+"-ns-badge'>"+machine["user"]["name"]+"</span>"
-    exit_node_badge   = "" if not exit_route_enabled else "<span class='badge grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器启用了出口路由。'>出口</span>"
-    ha_route_badge    = "" if not ha_enabled         else "<span class='badge blue-grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器启用了高可用性（故障转移）路由。'>HA</span>"
-    expiration_badge  = "" if not expiring_soon      else "<span class='badge red white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器即将过期。'>即将过期！</span>"
+    # Generate the various badges:
+status_badge      = "<i class='material-icons left tooltipped " + text_color + "' data-position='top' data-tooltip='上次在线时间：" + last_seen_print + "' id='" + machine["id"] + "-status'>fiber_manual_record</i>"
+user_badge        = "<span class='badge ipinfo " + user_color + " white-text hide-on-small-only' id='" + machine["id"] + "-ns-badge'>" + machine["user"]["name"] + "</span>"
+exit_node_badge   = "" if not exit_route_enabled else "<span class='badge grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器已启用出口路由。'>出口</span>"
+ha_route_badge    = "" if not ha_enabled         else "<span class='badge blue-grey white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器已启用高可用性（故障转移）路由。'>HA</span>"
+expiration_badge  = "" if not expiring_soon      else "<span class='badge red white-text text-lighten-4 tooltipped' data-position='left' data-tooltip='该机器即将到期。'>即将到期！</span>"
 
     machine_content[idx] = (str(render_template(
         'machines_card.html', 
@@ -477,45 +485,45 @@ def thread_machine_content(machine, machine_content, idx, all_routes, failover_p
         machine_tags      = Markup(tags),
         taglist           = machine["forcedTags"]
     )))
-    app.logger.info("完成机器 "+machine["givenName"]+" 索引 "+str(idx)+" 的线程")
+    app.logger.info("Finished thread for machine "+machine["givenName"]+" index "+str(idx))
 
 def render_machines_cards():
-    app.logger.info("正在渲染机器卡片")
+    app.logger.info("Rendering machine cards")
     url           = headscale.get_url()
     api_key       = headscale.get_api_key()
     machines_list = headscale.get_machines(url, api_key)
 
     #########################################
-    # 线程化整个过程。  
+    # Thread this entire thing.  
     num_threads = len(machines_list["machines"])
     iterable = []
     machine_content = {}
     failover_pair_prefixes = []
     for i in range (0, num_threads):
-        app.logger.debug("添加迭代项："+str(i))
+        app.logger.debug("Appending iterable:  "+str(i))
         iterable.append(i)
-    # Flask-Executor 方法：
+    # Flask-Executor Method:
 
-    # 获取所有路由
+    # Get all routes
     all_routes = headscale.get_routes(url, api_key)
-    # app.logger.debug("找到的所有路由")
+    # app.logger.debug("All found routes")
     # app.logger.debug(str(all_routes))
 
     if LOG_LEVEL == "DEBUG":
-        # DEBUG: 逐个进行循环：
+        # DEBUG:  Do in a forloop:
         for idx in iterable: thread_machine_content(machines_list["machines"][idx], machine_content, idx, all_routes, failover_pair_prefixes)
     else:
-        app.logger.info("开始线程")
+        app.logger.info("Starting futures")
         futures = [executor.submit(thread_machine_content, machines_list["machines"][idx], machine_content, idx, all_routes, failover_pair_prefixes) for idx in iterable]
-        # 等待执行器完成所有任务：
+        # Wait for the executor to finish all jobs:
         wait(futures, return_when=ALL_COMPLETED)
-        app.logger.info("完成线程")
+        app.logger.info("Finished futures")
 
-    # 按机器ID对内容进行排序：
+    # Sort the content by machine_id:
     sorted_machines = {key: val for key, val in sorted(machine_content.items(), key = lambda ele: ele[0])}
 
     content = "<ul class='collapsible expandable'>"
-    # 打印内容
+    # Print the content
 
     for index in range(0, num_threads):
         content = content+str(sorted_machines[index])
@@ -525,20 +533,20 @@ def render_machines_cards():
     return Markup(content)
 
 def render_users_cards():
-    app.logger.info("正在渲染用户卡片")
+    app.logger.info("Rendering Users cards")
     url       = headscale.get_url()
     api_key   = headscale.get_api_key()
     user_list = headscale.get_users(url, api_key)
 
     content = "<ul class='collapsible expandable'>"
     for user in user_list["users"]:
-        # 获取用户中的所有PreAuth密钥，并仅在存在时显示：
+        # Get all preAuth Keys in the user, only display if one exists:
         preauth_keys_collection = build_preauth_key_table(user["name"])
 
-        # 设置用户徽章颜色：
+        # Set the user badge color:
         user_color = helper.get_color(int(user["id"]), "text")
 
-        # 生成各种徽章：
+        # Generate the various badges:
         status_badge      = "<i class='material-icons left "+user_color+"' id='"+user["id"]+"-status'>fiber_manual_record</i>"
 
         content = content + render_template(
@@ -552,12 +560,12 @@ def render_users_cards():
     return Markup(content)
 
 def build_preauth_key_table(user_name):
-    app.logger.info("正在构建用户 "+str(user_name)+" 的PreAuth密钥表")
+    app.logger.info("Building the PreAuth key table for User:  %s", str(user_name))
     url            = headscale.get_url()
     api_key        = headscale.get_api_key()
 
     preauth_keys = headscale.get_preauth_keys(url, api_key, user_name)
-    preauth_keys_collection = """<li class="collection-item avatar">
+preauth_keys_collection = """<li class="collection-item avatar">
             <span
                 class='badge grey lighten-2 btn-small' 
                 onclick='toggle_expired()'
@@ -566,29 +574,31 @@ def build_preauth_key_table(user_name):
                 href="#card_modal" 
                 class='badge grey lighten-2 btn-small modal-trigger' 
                 onclick="load_modal_add_preauth_key('"""+user_name+"""')"
-            >添加PreAuth密钥</span>
+            >添加预授权密钥</span>
             <i class="material-icons circle">vpn_key</i>
-            <span class="title">PreAuth密钥</span>
+            <span class="title">预授权密钥</span>
             """
-    if len(preauth_keys["preAuthKeys"]) == 0: preauth_keys_collection += "<p>此用户未定义密钥</p>"
+
+    if len(preauth_keys["preAuthKeys"]) == 0: preauth_keys_collection += "<p>No keys defined for this user</p>"
     if len(preauth_keys["preAuthKeys"]) > 0:
         preauth_keys_collection += """
                 <table class="responsive-table striped" id='"""+user_name+"""-preauthkey-table'>
                     <thead>
                         <tr>
                             <td>ID</td>
-                            <td class='tooltipped' data-tooltip='点击密钥前缀以将其复制到剪贴板'>密钥前缀</td>
-                            <td><center>可重用</center></td>
+                            <td class='tooltipped' data-tooltip='点击授权密钥前缀将其复制到剪贴板'>密钥前缀</td>
+                            <td><center>可重复使用</center></td>
                             <td><center>已使用</center></td>
-                            <td><center>短暂</center></td>
-                            <td><center>可用</center></td>
+                            <td><center>临时的</center></td>
+                            <td><center>可用的</center></td>
                             <td><center>操作</center></td>
                         </tr>
                     </thead>
                 """
+
     for key in preauth_keys["preAuthKeys"]:
-        # 获取密钥到期日期并与当前时间进行比较以检查是否已过期：
-        # 设置当前时区和本地时间
+        # Get the key expiration date and compare it to now to check if it's expired:
+        # Set the current timezone and local time
         timezone         = pytz.timezone(os.environ["TZ"] if os.environ["TZ"] else "UTC")
         local_time       = timezone.localize(datetime.now())
         expiration_parse = parser.parse(key["expiration"])
@@ -599,7 +609,7 @@ def build_preauth_key_table(user_name):
         if key["reusable"] and not key_expired: key_usable = True
         if not key["reusable"] and not key["used"] and not key_expired: key_usable = True
         
-        # 用于javascript函数查找以切换隐藏功能的类
+        # Class for the javascript function to look for to toggle the hide function
         hide_expired = "expired-row" if not key_usable else ""
 
         btn_reusable  = "<i class='pulse material-icons tiny blue-text text-darken-1'>fiber_manual_record</i>"   if key["reusable"]  else ""
@@ -607,11 +617,11 @@ def build_preauth_key_table(user_name):
         btn_used      = "<i class='pulse material-icons tiny yellow-text text-darken-1'>fiber_manual_record</i>" if key["used"]      else ""
         btn_usable    = "<i class='pulse material-icons tiny green-text text-darken-1'>fiber_manual_record</i>"  if key_usable       else ""
 
-        # 其他按钮：
-        btn_delete    = "<span href='#card_modal' data-tooltip='使此PreAuth密钥过期' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\""+user_name+"\", \""+str(key["key"])+"\")'>过期</span>" if key_usable else ""
-        tooltip_data  = "到期时间："+expiration_time
+        # Other buttons:
+        btn_delete    = "<span href='#card_modal' data-tooltip='过期此预授权密钥' class='btn-small modal-trigger badge tooltipped white-text red' onclick='load_modal_expire_preauth_key(\""+user_name+"\", \""+str(key["key"])+"\")'>过期</span>" if key_usable else ""
+        tooltip_data  = "到期时间:  "+expiration_time
 
-        # TR ID将类似于“1-albert-tr”
+        # TR ID will look like "1-albert-tr"
         preauth_keys_collection = preauth_keys_collection+"""
             <tr id='"""+key["id"]+"""-"""+user_name+"""-tr' class='"""+hide_expired+"""'>
                 <td>"""+str(key["id"])+"""</td>
@@ -630,7 +640,7 @@ def build_preauth_key_table(user_name):
     return preauth_keys_collection
 
 def oidc_nav_dropdown(user_name, email_address, name):
-    app.logger.info("启用了OIDC。正在构建OIDC导航下拉菜单")
+    app.logger.info("OIDC已启用。构建OIDC导航下拉菜单")
     html_payload = """
         <!-- OIDC下拉菜单结构 -->
         <ul id="dropdown1" class="dropdown-content dropdown-oidc">
@@ -647,7 +657,7 @@ def oidc_nav_dropdown(user_name, email_address, name):
                 </li>
             </ul>
         <li class="divider"></li>
-            <li><a href="logout"><i class="material-icons left">exit_to_app</i> 登出</a></li>
+            <li><a href="logout"><i class="material-icons left">exit_to_app</i> 退出</a></li>
         </ul>
         <li>
             <a class="dropdown-trigger" href="#!" data-target="dropdown1">
@@ -659,7 +669,7 @@ def oidc_nav_dropdown(user_name, email_address, name):
 
 def oidc_nav_mobile(user_name, email_address, name):
     html_payload = """
-         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>登出</a></li>
+         <li><hr><a href="logout"><i class="material-icons left">exit_to_app</i>退出</a></li>
     """
     return Markup(html_payload)
 
@@ -669,24 +679,25 @@ def render_search():
         <a href="#"><i class="material-icons">search</i></a>
     </li>
     """
+
     return Markup(html_payload)
 
 def render_routes():
-    app.logger.info("正在渲染路由页面")
+    app.logger.info("Rendering Routes page")
     url           = headscale.get_url()
     api_key       = headscale.get_api_key()
     all_routes    = headscale.get_routes(url, api_key)
 
-    # 如果没有路由，直接退出：
-    if len(all_routes) == 0: return Markup("<br><br><br><center>没有要显示的路由！</center>")
-    # 获取所有路由的ID列表以进行迭代：
+    # If there are no routes, just exit:
+    if len(all_routes) == 0: return Markup("<br><br><br><center>There are no routes to display!</center>")
+    # Get a list of all Route ID's to iterate through:
     all_routes_id_list = []
     for route in all_routes["routes"]:
         all_routes_id_list.append(route["id"])
         if route["machine"]["name"]:
-            app.logger.info("找到路由 %s / 机器：%s", str(route["id"]), route["machine"]["name"])
+            app.logger.info("Found route %s / machine: %s", str(route["id"]), route["machine"]["name"])
         else: 
-            app.logger.info("路由id %s没有关联的机器。", str(route["id"]))
+            app.logger.info("Route id %s has no machine associated.", str(route["id"]))
 
 
     route_content    = ""
@@ -695,7 +706,7 @@ def render_routes():
 
     route_title='<span class="card-title">路由</span>'
     failover_title='<span class="card-title">故障转移路由</span>'
-    exit_title='<span class="card-title">出口路由</span>'
+    exit_title='<span class="card-title">退出路由</span>'
 
     markup_pre = """
     <div class="row">
@@ -713,21 +724,22 @@ def render_routes():
     """
 
     ##############################################################################################
-    # 步骤1：获取所有非出口和非故障转移路由：
+    # 步骤 1：获取所有非退出和非故障转移路由：
     route_content = markup_pre+route_title
     route_content += """<p><table>
     <thead>
         <tr>
             <th>ID       </th>
-            <th>机器     </th>
-            <th>路由     </th>
+            <th>设备    </th>
+            <th>路由    </th>
             <th width="60px">启用</th>
         </tr>
     </thead>
     <tbody>
     """
+
     for route in all_routes["routes"]:
-        # 获取相关信息：
+        # Get relevant info:
         route_id    = route["id"]
         machine     = route["machine"]["givenName"]
         prefix      = route["prefix"]
@@ -736,16 +748,16 @@ def render_routes():
         is_failover = False
         is_exit     = False 
 
-        enabled  = "<i id='"+route["id"]+"' onclick='toggle_route("+route["id"]+", \"True\", \"routes\")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='点击以禁用'>fiber_manual_record</i>"
-        disabled = "<i id='"+route["id"]+"' onclick='toggle_route("+route["id"]+", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='点击以启用' >fiber_manual_record</i>"
+        enabled  = "<i id='"+route["id"]+"' onclick='toggle_route("+route["id"]+", \"True\", \"routes\")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='Click to disable'>fiber_manual_record</i>"
+        disabled = "<i id='"+route["id"]+"' onclick='toggle_route("+route["id"]+", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='Click to enable' >fiber_manual_record</i>"
 
-        # 设置显示：
+        # Set the displays:
         enabled_display  = disabled
 
         if is_enabled:  enabled_display = enabled
-        # 检查前缀是否为出口路由：
+        # Check if a prefix is an Exit route:
         if prefix == "0.0.0.0/0" or prefix == "::/0":  is_exit = True
-        # 检查前缀是否是故障转移对的一部分：
+        # Check if a prefix is part of a failover pair:
         for route_check in all_routes["routes"]:
             if not is_exit:
                 if route["prefix"] == route_check["prefix"]:
@@ -753,7 +765,7 @@ def render_routes():
                         is_failover = True
 
         if not is_exit and not is_failover and machine != "":
-        # 为所有非出口路由构建一个简单的表格：
+        # Build a simple table for all non-exit routes:
             route_content += """
             <tr>
                 <td>"""+str(route_id         )+"""</td>
@@ -765,65 +777,65 @@ def render_routes():
     route_content += "</tbody></table></p>"+markup_post
 
     ##############################################################################################
-    # 步骤2：仅获取所有故障转移路由。每个故障转移前缀添加一个单独的表格
+    # Step 2:  Get all failover routes only.  Add a separate table per failover prefix
     failover_route_prefix = []
     failover_available = False
 
     for route in all_routes["routes"]:
-        # 获取所有路由的前缀列表...
+        # Get a list of all prefixes for all routes...
         for route_check in all_routes["routes"]:
-            # ...不是出口路由的...
+            # ... that  aren't exit routes... 
             if route["prefix"] !="0.0.0.0/0" and route["prefix"] != "::/0":
-                # 如果当前路由与任何其他路由的前缀匹配...
+                # if the curren route matches any prefix of any other route...
                 if route["prefix"] == route_check["prefix"]:
-                    # 并且路由ID不同...
+                    # and the route ID's are different ...
                     if route["id"] != route_check["id"]:
-                        # ...并且前缀尚未在列表中...
+                        # ... and the prefix is not already in the list...
                         if route["prefix"] not in failover_route_prefix:
-                            # 将前缀添加到failover_route_prefix列表中
+                            # append the prefix to the failover_route_prefix list
                             failover_route_prefix.append(route["prefix"])
                             failover_available = True
 
     if failover_available:
-        # 设置显示代码：
+        # Set up the display code:
         enabled  = "<i class='material-icons green-text text-lighten-2'>fiber_manual_record</i>"
         disabled = "<i class='material-icons red-text text-lighten-2'>fiber_manual_record</i>"
 
         failover_content = markup_pre+failover_title
-        # 构建故障转移路由的显示：
+        # Build the display for failover routes:
         for route_prefix in failover_route_prefix:
-            # 获取与route_prefix关联的所有路由ID：
+            # Get all route ID's associated with the route_prefix:
             route_id_list = []
             for route in all_routes["routes"]:
                 if route["prefix"] == route_prefix:
                     route_id_list.append(route["id"])
 
-            # 设置显示代码：
+            # Set up the display code:
             failover_enabled  = "<i id='"+str(route_prefix)+"' class='material-icons small left green-text text-lighten-2'>fiber_manual_record</i>"
             failover_disabled = "<i id='"+str(route_prefix)+"' class='material-icons small left red-text text-lighten-2'>fiber_manual_record</i>"
 
             failover_display = failover_disabled
             for route_id in route_id_list:
-                # 获取路由的索引：
+                # Get the routes index:
                 current_route_index = all_routes_id_list.index(route_id)
                 if all_routes["routes"][current_route_index]["enabled"]: failover_display = failover_enabled
 
 
-            # 获取与前缀关联的所有route_id：
+            # Get all route_id's associated with the route prefix:
             failover_content += """<p>
             <h5>"""+failover_display+"""</h5><h5>"""+str(route_prefix)+"""</h5>
             <table>
                 <thead>
                     <tr>
-                        <th>机器</th>
-                        <th width="60px">启用</th>
-                        <th width="60px">主要</th>
+                        <th>Machine</th>
+                        <th width="60px">Enabled</th>
+                        <th width="60px">Primary</th>
                     </tr>
                 </thead>
                 <tbody>
             """
 
-            # 构建显示：
+            # Build the display:
             for route_id in route_id_list:
                 idx = all_routes_id_list.index(route_id)
 
@@ -835,20 +847,20 @@ def render_routes():
                 payload = []
                 for item in route_id_list: payload.append(int(item))
                  
-                app.logger.debug("[%s] 机器：[%s]  %s : %s / %s", str(route_id), str(machine_id), str(machine), str(is_enabled), str(is_primary))
+                app.logger.debug("[%s] Machine:  [%s]  %s : %s / %s", str(route_id), str(machine_id), str(machine), str(is_enabled), str(is_primary))
                 app.logger.debug(str(all_routes["routes"][idx]))
 
-                # 设置显示代码：
-                enabled_display_enabled  = "<i id='"+str(route_id)+"' onclick='toggle_failover_route_routespage("+str(route_id)+", \"True\", \""+str(route_prefix)+"\", "+str(payload)+")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='点击以禁用'>fiber_manual_record</i>"
-                enabled_display_disabled = "<i id='"+str(route_id)+"' onclick='toggle_failover_route_routespage("+str(route_id)+", \"False\", \""+str(route_prefix)+"\", "+str(payload)+")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='点击以启用'>fiber_manual_record</i>"
+                # Set up the display code:
+                enabled_display_enabled  = "<i id='"+str(route_id)+"' onclick='toggle_failover_route_routespage("+str(route_id)+", \"True\", \""+str(route_prefix)+"\", "+str(payload)+")'  class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='Click to disable'>fiber_manual_record</i>"
+                enabled_display_disabled = "<i id='"+str(route_id)+"' onclick='toggle_failover_route_routespage("+str(route_id)+", \"False\", \""+str(route_prefix)+"\", "+str(payload)+")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='Click to enable'>fiber_manual_record</i>"
                 primary_display_enabled  = "<i id='"+str(route_id)+"-primary' class='material-icons green-text text-lighten-2'>fiber_manual_record</i>"
                 primary_display_disabled = "<i id='"+str(route_id)+"-primary' class='material-icons red-text text-lighten-2'>fiber_manual_record</i>"
                 
-                # 设置显示：
+                # Set displays:
                 enabled_display = enabled_display_enabled if is_enabled else enabled_display_disabled
                 primary_display = primary_display_enabled if is_primary else primary_display_disabled
 
-                # 为所有非出口路由构建一个简单的表格：
+                # Build a simple table for all non-exit routes:
                 failover_content += """
                     <tr>
                         <td>"""+str(machine)+"""</td>
@@ -860,28 +872,28 @@ def render_routes():
         failover_content += markup_post
 
     ##############################################################################################
-    # 步骤3：仅获取出口节点：
+    # Step 3:  Get exit nodes only:
     exit_node_list = []
-    # 获取具有出口路由的节点列表：
+    # Get a list of nodes with exit routes:
     for route in all_routes["routes"]:
-        # 对于每个找到的出口路由，将机器名称存储在数组中：
+        # For every exit route found, store the machine name in an array:
         if route["prefix"] == "0.0.0.0/0" or route["prefix"] == "::/0":
             if route["machine"]["givenName"] not in exit_node_list: 
                 exit_node_list.append(route["machine"]["givenName"])
 
-    # 出口节点显示构建：
-    # 按机器而不是按路由显示
+    # Exit node display building:
+    # Display by machine, not by route
     exit_content = markup_pre+exit_title
     exit_content += """<p><table>
     <thead>
         <tr>
-            <th>机器</th>
-            <th>启用</th>
+            <th>Machine</th>
+            <th>Enabled</th>
         </tr>
     </thead>
     <tbody>
     """
-    # 获取列表中每个节点的出口路由ID： 
+    # Get exit route ID's for each node in the list: 
     for node in exit_node_list:
         node_exit_route_ids = []
         exit_enabled = False
@@ -897,10 +909,10 @@ def render_routes():
                         exit_enabled = True
 
         if exit_available:
-            # 设置显示代码：
-            enabled  = "<i id='"+machine_id+"-exit' onclick='toggle_exit("+node_exit_route_ids[0]+", "+node_exit_route_ids[1]+", \""+machine_id+"-exit\", \"True\",  \"routes\")' class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='点击以禁用'>fiber_manual_record</i>"
-            disabled = "<i id='"+machine_id+"-exit' onclick='toggle_exit("+node_exit_route_ids[0]+", "+node_exit_route_ids[1]+", \""+machine_id+"-exit\", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='点击以启用' >fiber_manual_record</i>"
-            # 设置显示：
+            # Set up the display code:
+            enabled  = "<i id='"+machine_id+"-exit' onclick='toggle_exit("+node_exit_route_ids[0]+", "+node_exit_route_ids[1]+", \""+machine_id+"-exit\", \"True\",  \"routes\")' class='material-icons green-text text-lighten-2 tooltipped' data-tooltip='Click to disable'>fiber_manual_record</i>"
+            disabled = "<i id='"+machine_id+"-exit' onclick='toggle_exit("+node_exit_route_ids[0]+", "+node_exit_route_ids[1]+", \""+machine_id+"-exit\", \"False\", \"routes\")' class='material-icons red-text text-lighten-2 tooltipped' data-tooltip='Click to enable' >fiber_manual_record</i>"
+            # Set the displays:
             enabled_display = enabled if exit_enabled else disabled
 
             exit_content += """
