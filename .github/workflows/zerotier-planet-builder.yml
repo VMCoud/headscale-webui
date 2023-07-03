@@ -1,4 +1,4 @@
-name: zerotier-planet-builder
+name: headscale-webui
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
       - name: Prepare zerotier-planet-builder
         id: prep_zerotier-planet-builder
         run: |
-          DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/zerotier-controller
+          DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/headscale-webui
           VERSION=latest
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
@@ -40,8 +40,8 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build and push zerotier-controller
-        id: docker_zerotier-controller
+      - name: Build and push headscale-webui
+        id: docker_headscale-webui
         uses: docker/build-push-action@v3
         with:
           context: ./
@@ -49,11 +49,11 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.prep_zerotier-planet-builder.outputs.tags }}
+          tags: ${{ steps.prep_headscale-webui.outputs.tags }}
 
       - name: Push to Docker Repository
         uses: docker/metadata-action@v3
         with:
-          images: ${{ steps.prep_zerotier-planet-builder.outputs.tags }}
+          images: ${{ steps.prep_headscale-webui.outputs.tags }}
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
