@@ -713,7 +713,7 @@ def render_routes():
 
     route_title = '<span class="card-title">路由</span>'
     failover_title = '<span class="card-title">故障转移路由</span>'
-    exit_title = '<span class="card-title">退出路由</span>'
+    exit_title = '<span class="card-title">管理路由</span>'
 
     markup_pre = """
     <div class="row">
