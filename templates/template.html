@@ -1,153 +1,195 @@
 <!DOCTYPE html>
 <html id="page">
-   <head>
-      <title>●::[●●] {% block title %} {% endblock %}</title>
 
-      <link rel="apple-touch-icon" sizes="57x57" href="static/img/favicon/apple-icon-57x57.png">
-      <link rel="apple-touch-icon" sizes="60x60" href="static/img/favicon/apple-icon-60x60.png">
-      <link rel="apple-touch-icon" sizes="72x72" href="static/img/favicon/apple-icon-72x72.png">
-      <link rel="apple-touch-icon" sizes="76x76" href="static/img/favicon/apple-icon-76x76.png">
-      <link rel="apple-touch-icon" sizes="114x114" href="static/img/favicon/apple-icon-114x114.png">
-      <link rel="apple-touch-icon" sizes="120x120" href="static/img/favicon/apple-icon-120x120.png">
-      <link rel="apple-touch-icon" sizes="144x144" href="static/img/favicon/apple-icon-144x144.png">
-      <link rel="apple-touch-icon" sizes="152x152" href="static/img/favicon/apple-icon-152x152.png">
-      <link rel="apple-touch-icon" sizes="180x180" href="static/img/favicon/apple-icon-180x180.png">
-      <link rel="icon" type="image/png" sizes="192x192"  href="static/img/favicon/android-icon-192x192.png">
-      <link rel="icon" type="image/png" sizes="32x32" href="static/img/favicon/favicon-32x32.png">
-      <link rel="icon" type="image/png" sizes="96x96" href="static/img/favicon/favicon-96x96.png">
-      <link rel="icon" type="image/png" sizes="16x16" href="static/img/favicon/favicon-16x16.png">
-      <link rel="manifest" href="static/img/favicon/manifest.json">
-      <meta name="msapplication-TileColor" content="#ffffff">
-      <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
-      <meta name="theme-color" content="#ffffff">
-      <script>
-         // 当主页面内容加载完成后逐渐隐藏缓冲界面
-         window.addEventListener('DOMContentLoaded', function() {
-           var loadingScreen = document.getElementById('loading-screen');
-           loadingScreen.classList.add('hide-loading-screen');
-           setTimeout(function() {
-             loadingScreen.style.display = 'none';
-           }, 500); // 等待0.5秒后完全隐藏缓冲界面
-         });
-       </script>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <!-- CSS and Icons -->
-      <link href="static/css/materialize.min.css" type="text/css" rel="stylesheet"/> 
-      <link href="static/css/overrides.css"   type="text/css" rel="stylesheet"/>
-      <style>
-           /* 缓冲界面的样式 */
-  #loading-screen {
-    opacity: 1;
-    transition: opacity 0.5s ease-in-out;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100vh;
-    background-color: #f2f2f2;
-  }
+<head>
+   <title>●::[●●] {% block title %} {% endblock %}</title>
 
-  /* 隐藏缓冲界面的样式 */
-  .hide-loading-screen {
-    opacity: 0;
-  }
+   <link rel="apple-touch-icon" sizes="57x57" href="static/img/favicon/apple-icon-57x57.png">
+   <link rel="apple-touch-icon" sizes="60x60" href="static/img/favicon/apple-icon-60x60.png">
+   <link rel="apple-touch-icon" sizes="72x72" href="static/img/favicon/apple-icon-72x72.png">
+   <link rel="apple-touch-icon" sizes="76x76" href="static/img/favicon/apple-icon-76x76.png">
+   <link rel="apple-touch-icon" sizes="114x114" href="static/img/favicon/apple-icon-114x114.png">
+   <link rel="apple-touch-icon" sizes="120x120" href="static/img/favicon/apple-icon-120x120.png">
+   <link rel="apple-touch-icon" sizes="144x144" href="static/img/favicon/apple-icon-144x144.png">
+   <link rel="apple-touch-icon" sizes="152x152" href="static/img/favicon/apple-icon-152x152.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="static/img/favicon/apple-icon-180x180.png">
+   <link rel="icon" type="image/png" sizes="192x192" href="static/img/favicon/android-icon-192x192.png">
+   <link rel="icon" type="image/png" sizes="32x32" href="static/img/favicon/favicon-32x32.png">
+   <link rel="icon" type="image/png" sizes="96x96" href="static/img/favicon/favicon-96x96.png">
+   <link rel="icon" type="image/png" sizes="16x16" href="static/img/favicon/favicon-16x16.png">
+   <link rel="manifest" href="static/img/favicon/manifest.json">
+   <meta name="msapplication-TileColor" content="#ffffff">
+   <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+   <meta name="theme-color" content="#ffffff">
+   <script>
+      // 当主页面内容加载完成后逐渐隐藏缓冲界面
+      window.addEventListener('DOMContentLoaded', function () {
+         var loadingScreen = document.getElementById('loading-screen');
+         loadingScreen.classList.add('hide-loading-screen');
+         setTimeout(function () {
+            loadingScreen.style.display = 'none';
+         }, 1000); // 等待0.5秒后完全隐藏缓冲界面
+      });
+   </script>
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <!-- CSS and Icons -->
+   <link href="static/css/materialize.min.css" type="text/css" rel="stylesheet" />
+   <link href="static/css/overrides.css" type="text/css" rel="stylesheet" />
+   <style>
+      body {
+         overflow-x: hidden;
+      }
 
-  /* 文本动画的样式 */
-  .loading-animation {
-    font-size: 24px;
-    font-weight: bold;
-    animation: blink 1s infinite;
-  }
+      #loading-screen {
+         opacity: 1;
+         transition: opacity 0.5s ease-in-out;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         width: 100%;
+         height: 100vh;
+         background-color: #f2f2f2;
+         position: fixed;
+         top: 0;
+         left: 0;
+         z-index: 9999;
+      }
 
-  /* 闪烁动画的关键帧 */
-  @keyframes blink {
-    0% {
-      opacity: 0;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-       /* fallback */
-          @font-face {
-             font-family: 'Material Icons';
-             font-style: normal;
-             font-weight: 400;
-             src: url(static/fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
-          }
-          
-          .material-icons {
-             font-family: 'Material Icons';
-             font-weight: normal;
-             font-style: normal;
-             font-size: 24px;
-             line-height: 1;
-             letter-spacing: normal;
-             text-transform: none;
-             display: inline-block;
-             white-space: nowrap;
-             word-wrap: normal;
-             direction: ltr;
-             -moz-font-feature-settings: 'liga';
-             -font-feature-settings: 'liga';
-             -moz-osx-font-smoothing: grayscale;
-          }
-      </style>
-   </head>
-   <body>
-      <div id="loading-screen">
-         <!-- 文本动画 -->
-         <p class="loading-animation">Loading...</p>
-       </div>
-      <div id="main-content">
+      /* 隐藏缓冲界面的样式 */
+      .hide-loading-screen {
+         opacity: 0;
+      }
+
+      /* 文本动画的样式 */
+      .loading-animation {
+         font-size: 24px;
+         font-weight: bold;
+         animation: blink 1s infinite;
+      }
+
+      /* 闪烁动画的关键帧 */
+      @keyframes blink {
+         0% {
+            opacity: 0;
+         }
+
+         50% {
+            opacity: 1;
+         }
+
+         100% {
+            opacity: 0;
+         }
+      }
+
+      /* fallback */
+      @font-face {
+         font-family: 'Material Icons';
+         font-style: normal;
+         font-weight: 400;
+         src: url(static/fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+      }
+
+      .material-icons {
+         font-family: 'Material Icons';
+         font-weight: normal;
+         font-style: normal;
+         font-size: 24px;
+         line-height: 1;
+         letter-spacing: normal;
+         text-transform: none;
+         display: inline-block;
+         white-space: nowrap;
+         word-wrap: normal;
+         direction: ltr;
+         -moz-font-feature-settings: 'liga';
+         -font-feature-settings: 'liga';
+         -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* fallback */
+      @font-face {
+         font-family: 'Material Icons';
+         font-style: normal;
+         font-weight: 400;
+         src: url(static/fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+      }
+
+      .material-icons {
+         font-family: 'Material Icons';
+         font-weight: normal;
+         font-style: normal;
+         font-size: 24px;
+         line-height: 1;
+         letter-spacing: normal;
+         text-transform: none;
+         display: inline-block;
+         white-space: nowrap;
+         word-wrap: normal;
+         direction: ltr;
+         -moz-font-feature-settings: 'liga';
+         -font-feature-settings: 'liga';
+         -moz-osx-font-smoothing: grayscale;
+      }
+   </style>
+</head>
+
+<body>
+   <div id="loading-screen">
+      <!-- 文本动画 -->
+      <p class="loading-animation">Loading...</p>
+   </div>
+   <div id="main-content">
       <nav>
          <div class="nav-wrapper {{ COLOR_NAV }}">
-           <div id="nav-search" class="nav-search hidden">
-            <form>
-               <div class="input-field">
-                 <input id="search" type="search" required   oninput="liveSearch()">
-                 <label class="label-icon" for="search"><i class="material-icons">search</i></label>
-                 <i class="material-icons" onclick="hide_search()">close</i>
-               </div>
-             </form>
-           </div>
-           <div id="nav-content" class="nav-content">
-            <img class="hide-on-med-and-down" style="padding-left: 10px" src="static/img/headscale3-dots.png" height="64px"></img>
-            <a href="overview" class="brand-logo bold" style="padding-left: 10px">
-                管理后台
-                <div class="right">
-                   <span class="left-align thin hide-on-small-only" style="padding-left: 10px">
-                      {% block header %}{% endblock %}
-                   </span>
-                </div>
-             </a>
-            <a href="#!" data-target="mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-            <ul class="right hide-on-med-and-down">
-                {% block INPAGE_SEARCH %}{% endblock %}
-                <li role="menu-item" class="tooltipped {{ overview_active   }}" data-position="bottom" data-tooltip="概览">
-                   <a href="overview"><i class="material-icons">map</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ routes_active   }}" data-position="bottom" data-tooltip="路由">
-                   <a href="routes"><i class="material-icons">alt_route</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ machines_active    }}" data-position="bottom" data-tooltip="设备">
-                   <a href="machines"><i class="material-icons">devices</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ users_active }}" data-position="bottom" data-tooltip="用户">
-                   <a href="users"><i class="material-icons">people</i></a>
-                </li>
-                <li role="menu-item" class="tooltipped {{ settings_active   }}" data-position="bottom" data-tooltip="设置">
-                   <a href="settings"><i class="material-icons">settings</i></a>
-                </li>
-                {% block OIDC_NAV_DROPDOWN %}{% endblock %}
-             </ul>
-           </div>
+            <div id="nav-search" class="nav-search hidden">
+               <form>
+                  <div class="input-field">
+                     <input id="search" type="search" required oninput="liveSearch()">
+                     <label class="label-icon" for="search"><i class="material-icons">search</i></label>
+                     <i class="material-icons" onclick="hide_search()">close</i>
+                  </div>
+               </form>
+            </div>
+            <div id="nav-content" class="nav-content">
+               <img class="hide-on-med-and-down" style="padding-left: 10px" src="static/img/headscale3-dots.png"
+                  height="64px"></img>
+               <a href="overview" class="brand-logo bold" style="padding-left: 10px">
+                  管理后台
+                  <div class="right">
+                     <span class="left-align thin hide-on-small-only" style="padding-left: 10px">
+                        {% block header %}{% endblock %}
+                     </span>
+                  </div>
+               </a>
+               <a href="#!" data-target="mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+               <ul class="right hide-on-med-and-down">
+                  {% block INPAGE_SEARCH %}{% endblock %}
+                  <li role="menu-item" class="tooltipped {{ overview_active   }}" data-position="bottom"
+                     data-tooltip="概览">
+                     <a href="overview"><i class="material-icons">map</i></a>
+                  </li>
+                  <li role="menu-item" class="tooltipped {{ routes_active   }}" data-position="bottom"
+                     data-tooltip="路由">
+                     <a href="routes"><i class="material-icons">alt_route</i></a>
+                  </li>
+                  <li role="menu-item" class="tooltipped {{ machines_active    }}" data-position="bottom"
+                     data-tooltip="设备">
+                     <a href="machines"><i class="material-icons">devices</i></a>
+                  </li>
+                  <li role="menu-item" class="tooltipped {{ users_active }}" data-position="bottom" data-tooltip="用户">
+                     <a href="users"><i class="material-icons">people</i></a>
+                  </li>
+                  <li role="menu-item" class="tooltipped {{ settings_active   }}" data-position="bottom"
+                     data-tooltip="设置">
+                     <a href="settings"><i class="material-icons">settings</i></a>
+                  </li>
+                  {% block OIDC_NAV_DROPDOWN %}{% endblock %}
+               </ul>
+            </div>
          </div>
-       </nav>
-       <ul class="sidenav" id="mobile">
+      </nav>
+      <ul class="sidenav" id="mobile">
          <li><a href="overview"><i class="material-icons left">map</i>概览</a></li>
          <li><a href="routes"><i class="material-icons left">alt_route</i>路由</a></li>
          <li><a href="machines"><i class="material-icons left">devices</i>设备</a></li>
@@ -158,28 +200,29 @@
       <div class="container">
          {% block content %} {% endblock %}
       </div>
-   <!-- Modals -->
-   <div id="generic_modal" class="modal">
-      <div class="modal-content">
-         <h4 id="generic_modal_title"></h4>
-         <p id="generic_modal_content"></p>
-      </div>
-      <div class="modal-footer">
-         <a href="#!" class="modal-close btn-flat">取消</a>
+      <!-- Modals -->
+      <div id="generic_modal" class="modal">
+         <div class="modal-content">
+            <h4 id="generic_modal_title"></h4>
+            <p id="generic_modal_content"></p>
+         </div>
+         <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">取消</a>
+         </div>
       </div>
    </div>
-   <!-- JavaScript / jQuery -->
-    <script type="text/javascript" src="static/js/jquery-2.2.4.min.js"></script>
-    <script type="text/javascript" src="static/js/materialize.min.js"></script> 
-   <script>M.AutoInit();</script>
-   <!-- Prevent the collapsibles on the Users and Machines pages from collapsing when another element is clicked -->
-   <script> 
-      var elem = document.querySelector('.collapsible.expandable');
-      var instance = M.Collapsible.init(elem, {
-      accordion: false
-      });
-   </script>
-   <script type="text/javascript" src="static/js/custom.js"></script>
-</div>
 </body>
+<!-- JavaScript / jQuery -->
+<script type="text/javascript" src="static/js/jquery-2.2.4.min.js"></script>
+<script type="text/javascript" src="static/js/materialize.min.js"></script>
+<script>M.AutoInit();</script>
+<!-- Prevent the collapsibles on the Users and Machines pages from collapsing when another element is clicked -->
+<script>
+   var elem = document.querySelector('.collapsible.expandable');
+   var instance = M.Collapsible.init(elem, {
+      accordion: false
+   });
+</script>
+<script type="text/javascript" src="static/js/custom.js"></script>
+
 </html>
